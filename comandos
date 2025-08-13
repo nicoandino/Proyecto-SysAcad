@@ -1,0 +1,11 @@
+abrir terminal de flask
+
+$env:FLASK_APP = "app:create_app"
+$env:FLASK_ENV = "testing" 
+python -m flask shell
+
+iniciar app
+
+$env:FLASK_APP = "app:create_app"
+$env:FLASK_ENV = "testing"
+python -m flask run
