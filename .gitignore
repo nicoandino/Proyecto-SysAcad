@@ -112,6 +112,7 @@ pyvenv.cfg
 # ⚠️ Evitar subir entornos virtuales mal ubicados
 Año*/
 Desarrollo*/
+de/
 Scripts/
 
 # VSCode settings
