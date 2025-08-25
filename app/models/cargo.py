@@ -17,11 +17,8 @@ class Cargo(db.Model):
         server_default="Sin descripción",
     )
 
-    # NUEVO: lo que el test usa
     grado = db.Column(db.Integer, nullable=True)
 
-    # Si todavía tenías 'puntos' y no lo usás, podés borrarlo; si lo querés mantener, dejalo.
-    # puntos = db.Column(db.Integer, nullable=True)
 
     categoria_cargo_id = db.Column(db.Integer, db.ForeignKey('categoriacargos.id'), nullable=True)
     categoria_cargo = db.relationship('CategoriaCargo', lazy=True)
