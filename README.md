@@ -70,7 +70,7 @@ Es importante que se cree su .env , en el archivo env-example, tiene que colocar
 luego guardarlo como un archivo ".env"
 
 ## Luego en powershell
-```powershell
+powershell
 $env:FLASK_APP="app:create_app"
 $env:FLASK_ENV="development"
 flask run
@@ -129,7 +129,7 @@ El script `crear_csv.py` genera un archivo `alumnos.csv` con **2.5 millones de r
 
 Ejecutar:
 
-```powershell
+powershell
 python crear_csv.py
 
 ### ⏱️ Este proceso demora aproximadamente 1 minuto en una PC de escritorio estándar.
@@ -199,3 +199,6 @@ Andino Nicolás , Legajo N°9935
 Assenza Ezequiel , Legajo N° 9943
 Lopez Matias , Legajo N° 10097
 Orella Lucas , Legajo N° 10163
+
+
+Luego de descargar , eliminar la carpeta de/Scripts
