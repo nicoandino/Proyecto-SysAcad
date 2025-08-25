@@ -1,0 +1,5 @@
+project-includes = [
+    "app/**/*.py",
+    "test/**/*.py",
+]
+project-excludes = ['C:\Users\agust\Escritorio\proyectodess\flask-sysacad\**\*venv\**\*']
