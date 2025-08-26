@@ -1,68 +1,42 @@
-import os
-import unittest
-from sqlalchemy import text
-from app import create_app, db
+import pytest
 from xml.etree import ElementTree as ET
+from app import create_app, db
+from app.models import facultad as facultad_model
+from test.instancias import nuevafacultad
+import os
 
-# Modelo actualizado
-class FacultadModel(db.Model):
-    __tablename__ = 'facultades'
-    id = db.Column(db.Integer, primary_key=True)
-    facultad = db.Column(db.Integer, nullable=False)
-    nombre = db.Column(db.String(255), nullable=False)
+@pytest.fixture
+def app_context():
+    app = create_app()
+    with app.app_context():
+        yield app
 
-class XMLImportTestCase(unittest.TestCase):
+def test_carga_facultades_desde_xml(app_context):
+    xml_file_path = os.path.join(
+        os.path.dirname(__file__), '..', 'archivados_xml', 'facultades.xml'
+    )
 
-    def setUp(self):
-        os.environ['FLASK_CONTEXT'] = 'testing'
-        os.environ['TEST_DATABASE_URI'] = 'postgresql+psycopg2://matuu:matu@localhost:5432/test_sysacad'
+    assert os.path.exists(xml_file_path), f"El archivo {xml_file_path} no existe."
 
-        self.app = create_app()
-        self.app_context = self.app.app_context()
-        self.app_context.push()
+    tree = ET.parse(xml_file_path)
+    root = tree.getroot()
 
-        db.create_all()
+    for item in root.findall('_expxml'):
+        facultad_element = item.find('facultad')
+        nombre_element = item.find('nombre')
 
-    def tearDown(self):
-        db.session.remove()
-        db.drop_all()
-        self.app_context.pop()
+        if facultad_element is not None and nombre_element is not None:
+            facultad = int(facultad_element.text)
+            nombre = nombre_element.text
+            obj = nuevafacultad(facultad=facultad, nombre=nombre)
+            db.session.add(obj)
+        else:
+            print(f"Item omitido por datos faltantes: {ET.tostring(item, encoding='unicode')}")
 
-    def test_import_xml_to_db(self):
-        # Ruta del archivo XML
-        xml_file_path = os.path.join(
-            os.path.dirname(__file__), '..', 'archivados_xml', 'facultades.xml'
-        )
+    db.session.commit()
 
-        # Verificamos que el archivo exista
-        self.assertTrue(os.path.exists(xml_file_path), f"El archivo {xml_file_path} no existe.")
-
-        # Parseamos el archivo XML
-        tree = ET.parse(xml_file_path)
-        root = tree.getroot()
-
-        for item in root.findall('_expxml'):
-            facultad_element = item.find('facultad')
-            nombre_element = item.find('nombre')
-
-            # Aseguramos que los elementos no sean None
-            if facultad_element is not None and nombre_element is not None:
-                facultad = int(facultad_element.text)
-                nombre = nombre_element.text
-
-                # Insertamos en la base de datos
-                new_entry = FacultadModel(facultad=facultad, nombre=nombre)
-                db.session.add(new_entry)
-            else:
-                print(f"Skipping item due to missing 'facultad' or 'nombre': {ET.tostring(item, encoding='unicode')}")
-
-        db.session.commit()
-
-        # Verificamos que los datos se hayan insertado correctamente
-        results = FacultadModel.query.all()
-        self.assertGreater(len(results), 0, "No se insertaron datos en la base de datos.")
-        for result in results:
-            print(f"Facultad: {result.facultad}, Nombre: {result.nombre}")
-
-if __name__ == '__main__':
-    unittest.main()
+    resultados = facultad_model.Facultad.query.all()
+    assert len(resultados) > 0, "No se insertaron datos en la base de datos."
+    for resultado in resultados:
+        assert resultado.nombre is not None
+        assert isinstance(resultado.facultad, int)

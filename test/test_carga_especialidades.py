@@ -1,70 +1,45 @@
-import os
-import unittest
-from sqlalchemy import text
-from app import create_app, db
+import pytest
 from xml.etree import ElementTree as ET
+from app import create_app, db
+from app.models import especialidad as especialidad_model
+from test.instancias import nuevaespecialidad
+import os
 
-# Modelo actualizado
-class EspecialidadModel(db.Model):
-    __tablename__ = 'especialidades'
-    id = db.Column(db.Integer, primary_key=True)
-    especialidad = db.Column(db.Integer, nullable=False)  # Campo agregado
-    nombre = db.Column(db.String(255), nullable=False)
-    observacion = db.Column(db.String(255), nullable=True)
+@pytest.fixture
+def app_context():
+    app = create_app()
+    with app.app_context():
+        yield app
 
-class XMLImportTestCase(unittest.TestCase):
+def test_carga_especialidades_desde_xml(app_context):
+    xml_file_path = os.path.join(
+        os.path.dirname(__file__), '..', 'archivados_xml', 'especialidades.xml'
+    )
 
-    def setUp(self):
-        os.environ['FLASK_CONTEXT'] = 'testing'
-        os.environ['TEST_DATABASE_URI'] = 'postgresql+psycopg2://matuu:matu@localhost:5432/test_sysacad'
+    assert os.path.exists(xml_file_path), f"El archivo {xml_file_path} no existe."
 
-        self.app = create_app()
-        self.app_context = self.app.app_context()
-        self.app_context.push()
+    tree = ET.parse(xml_file_path)
+    root = tree.getroot()
 
-        db.drop_all()  # Limpia la base de datos antes de crear las tablas
-        db.create_all()
+    for item in root.findall('_expxml'):
+        especialidad_element = item.find('especialidad')
+        nombre_element = item.find('nombre')
+        observacion_element = item.find('observacion')
 
-    def tearDown(self):
-        db.session.remove()
-        db.drop_all()
-        self.app_context.pop()
+        if especialidad_element is not None and nombre_element is not None:
+            especialidad = int(especialidad_element.text)
+            nombre = nombre_element.text
+            observacion = observacion_element.text if observacion_element is not None else None
 
-    def test_import_xml_to_db(self):
-        # Ruta del archivo XML
-        xml_file_path = os.path.join(
-            os.path.dirname(__file__), '..', 'archivados_xml', 'especialidades.xml'
-        )
+            obj = nuevaespecialidad(especialidad=especialidad, nombre=nombre, observacion=observacion)
+            db.session.add(obj)
+        else:
+            print(f"Item omitido por datos faltantes. Especialidad: {especialidad_element}, Nombre: {nombre_element}")
 
-        # Verificamos que el archivo exista
-        self.assertTrue(os.path.exists(xml_file_path), f"El archivo {xml_file_path} no existe.")
+    db.session.commit()
 
-        # Parseamos el archivo XML
-        tree = ET.parse(xml_file_path)
-        root = tree.getroot()
-
-        for item in root.findall('_expxml'):
-            especialidad_element = item.find('especialidad')
-            nombre_element = item.find('nombre')
-
-            # Aseguramos que los elementos no sean None
-            if especialidad_element is not None and nombre_element is not None:
-                especialidad = int(especialidad_element.text)
-                nombre = nombre_element.text
-
-                # Insertamos en la base de datos
-                new_entry = EspecialidadModel(especialidad=especialidad, nombre=nombre)
-                db.session.add(new_entry)
-            else:
-                print(f"skipeo el item por que falta algun dato. Especialidad: {especialidad_element}, Nombre: {nombre_element}")
-
-        db.session.commit()
-
-        # Verificamos que los datos se hayan insertado correctamente
-        results = EspecialidadModel.query.all()
-        self.assertGreater(len(results), 0, "No se insertaron datos en la base de datos.")
-        for result in results:
-            print(f"Especialidad: {result.especialidad}, Nombre: {result.nombre}")
-
-if __name__ == '__main__':
-    unittest.main()
+    resultados = especialidad_model.Especialidad.query.all()
+    assert len(resultados) > 0, "No se insertaron datos en la base de datos."
+    for resultado in resultados:
+        assert resultado.nombre is not None
+        assert isinstance(resultado.especialidad, int)

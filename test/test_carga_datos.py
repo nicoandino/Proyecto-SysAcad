@@ -1,67 +1,43 @@
-import os
-import unittest
-from sqlalchemy import text
-from app import create_app, db
+import pytest
 from xml.etree import ElementTree as ET
+from app import create_app, db
+from app.models import materia as materia_model
+from test.instancias import nuevamateria
 
-# Modelo de ejemplo
-class ExampleModel(db.Model):
-    __tablename__ = 'example'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50))
-    value = db.Column(db.String(50))
+@pytest.fixture
+def app_context():
+    app = create_app()
+    with app.app_context():
+        yield app
 
-class XMLImportTestCase(unittest.TestCase):
+def test_carga_datos_desde_xml(app_context):
+    xml_data = """
+    <materias>
+        <materia>
+            <nombre>Álgebra</nombre>
+            <codigo>MAT101</codigo>
+            <observacion>Obligatoria</observacion>
+        </materia>
+        <materia>
+            <nombre>Análisis</nombre>
+            <codigo>MAT102</codigo>
+            <observacion>Optativa</observacion>
+        </materia>
+    </materias>
+    """
 
-    def setUp(self):
-        os.environ['FLASK_CONTEXT'] = 'testing'
-        os.environ['TEST_DATABASE_URI'] = 'sqlite:///:memory:'
+    root = ET.fromstring(xml_data)
+    for nodo in root.findall('materia'):
+        nombre = nodo.find('nombre').text
+        codigo = nodo.find('codigo').text
+        observacion = nodo.find('observacion').text
+        materia = nuevamateria(nombre=nombre, codigo=codigo, observacion=observacion)
+        db.session.add(materia)
 
-        self.app = create_app()
-        self.app_context = self.app.app_context()
-        self.app_context.push()
+    db.session.commit()
 
-        db.create_all()
-
-    def tearDown(self):
-        db.session.remove()
-        db.drop_all()
-        self.app_context.pop()
-
-    def test_import_xml_to_db(self):
-        # Simulamos un archivo XML
-        xml_data = """
-        <data>
-            <item>
-                <name>Item1</name>
-                <value>Value1</value>
-            </item>
-            <item>
-                <name>Item2</name>
-                <value>Value2</value>
-            </item>
-        </data>
-        """
-
-        # Parseamos el XML
-        root = ET.fromstring(xml_data)
-        for item in root.findall('item'):
-            name = item.find('name').text
-            value = item.find('value').text
-
-            # Insertamos en la base de datos
-            new_entry = ExampleModel(name=name, value=value)
-            db.session.add(new_entry)
-
-        db.session.commit()
-
-        # Verificamos que los datos se hayan insertado correctamente
-        results = ExampleModel.query.all()
-        self.assertEqual(len(results), 2)
-        self.assertEqual(results[0].name, 'Item1')
-        self.assertEqual(results[0].value, 'Value1')
-        self.assertEqual(results[1].name, 'Item2')
-        self.assertEqual(results[1].value, 'Value2')
-
-if __name__ == '__main__':
-    unittest.main()
+    resultados = materia_model.Materia.query.all()
+    assert len(resultados) == 2
+    nombres = [m.nombre for m in resultados]
+    assert "Álgebra" in nombres
+    assert "Análisis" in nombres

@@ -1,36 +1,14 @@
-import os
-import unittest
+import pytest
 from sqlalchemy import text
 from app import create_app, db
 
-print("FLASK_CONTEXT en test:", os.getenv("FLASK_CONTEXT"))
-print("TEST_DATABASE_URI en test:", os.getenv("TEST_DATABASE_URI"))
+@pytest.fixture
+def app_context():
+    app = create_app()
+    with app.app_context():
+        yield app
 
-class ConnectionTestCase(unittest.TestCase):
-
-    def setUp(self):
-        # Configuramos el entorno de testing
-        os.environ['FLASK_CONTEXT'] = 'testing'
-        os.environ['TEST_DATABASE_URI'] = 'sqlite:///:memory:'  # Base de datos en memoria
-
-        # Creamos la app y el contexto
-        self.app = create_app()
-        self.app_context = self.app.app_context()
-        self.app_context.push()
-
-        # Inicializamos las tablas (aunque no haya modelos, esto es estándar)
-        db.create_all()
-
-    def tearDown(self):
-        # Limpiamos todo después del test
-        db.session.remove()
-        db.drop_all()
-        self.app_context.pop()
-
-    def test_db_connection(self):
-        # Ejecutamos una consulta básica para probar conexión a la base de datos
-        result = db.session.execute(text("SELECT 'Hello world'")).scalar()
-        self.assertEqual(result, 'Hello world')
-
-if __name__ == '__main__':
-    unittest.main()
+def test_db_connection(app_context):
+    # Verificamos que la base responde a una consulta simple
+    resultado = db.session.execute(text("SELECT 'Hello world'")).scalar()
+    assert resultado == 'Hello world', "La base no respondió correctamente a la consulta."
