@@ -14,7 +14,7 @@ class XMLImportTestCase(unittest.TestCase):
 
     def setUp(self):
         os.environ['FLASK_CONTEXT'] = 'testing'
-        #os.environ['TEST_DATABASE_URI'] = 'postgresql+psycopg2://matuu:matu@localhost:5432/test_sysacad'
+        os.environ['TEST_DATABASE_URI'] = 'postgresql+psycopg2://matuu:matu@localhost:5432/test_sysacad'
 
         self.app = create_app()
         self.app_context = self.app.app_context()

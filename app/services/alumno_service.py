@@ -44,7 +44,7 @@ class AlumnoService:
         # Campos editables (evitamos sobrescribir relaciones sin querer)
         existente.nombre = alumno.nombre
         existente.apellido = alumno.apellido
-        existente.nrodocumento = alumno.nrodocumento
+        existente.nro_documento = alumno.nro_documento
         existente.tipo_documento = alumno.tipo_documento
         existente.fecha_nacimiento = alumno.fecha_nacimiento
         existente.sexo = alumno.sexo
@@ -54,10 +54,11 @@ class AlumnoService:
         db.session.commit()
         return existente
 
+
     @staticmethod
     def borrar_por_id(id: int) -> bool:
-        return AlumnoRepository.borrar_por_id(id)
-
+        alumno = AlumnoRepository.borrar_por_id(id)
+        return alumno is not None
     # ---------- Certificado DOCX ----------
     @staticmethod
     def generar_certificado_alumno_regular_docx(alumno_id: int) -> Optional[Tuple[BytesIO, str]]:

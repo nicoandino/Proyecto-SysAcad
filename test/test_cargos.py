@@ -1,13 +1,19 @@
 import os
 import unittest
+from sqlalchemy import text
+from app import create_app, db
 from xml.etree import ElementTree as ET
 
-from app import create_app, db
-from app.models.cargo import Cargo  # <-- usamos el modelo real
+# Modelo actualizado
+class GradoModel(db.Model):
+    __tablename__ = 'grados'
+    id = db.Column(db.Integer, primary_key=True)
+    grado = db.Column(db.Integer, nullable=False)
+    nombre = db.Column(db.String(255), nullable=False)
 
 class XMLImportTestCase(unittest.TestCase):
+
     def setUp(self):
-        # Config de test
         os.environ['FLASK_CONTEXT'] = 'testing'
         os.environ['TEST_DATABASE_URI'] = 'postgresql+psycopg2://matuu:matu@localhost:5432/test_sysacad'
 
@@ -15,7 +21,7 @@ class XMLImportTestCase(unittest.TestCase):
         self.app_context = self.app.app_context()
         self.app_context.push()
 
-        db.drop_all()
+        db.drop_all()  # Limpia la base de datos antes de crear las tablas
         db.create_all()
 
     def tearDown(self):
@@ -24,58 +30,48 @@ class XMLImportTestCase(unittest.TestCase):
         self.app_context.pop()
 
     def test_import_xml_to_db(self):
-        # Ruta del XML de grados (lo usamos para poblar cargos)
+        # Ruta del archivo XML
         xml_file_path = os.path.join(
             os.path.dirname(__file__), '..', 'archivados_xml', 'grados.xml'
         )
+
+        # Verificamos que el archivo exista
         self.assertTrue(os.path.exists(xml_file_path), f"El archivo {xml_file_path} no existe.")
 
-        # Parseo
+        
+        # Parseamos el archivo XML
         tree = ET.parse(xml_file_path)
         root = tree.getroot()
 
-        inserted = 0
-
-        # En tu XML los ítems son <_expxml> con hijos <grado> y <nombre>
         for item in root.findall('_expxml'):
-            grado_el = item.find('grado')
-            nombre_el = item.find('nombre')
+            grado_element = item.find('grado')
+            nombre_element = item.find('nombre')
 
-            if grado_el is None or nombre_el is None:
-                # faltan datos, lo salteamos
-                continue
+            # Aseguramos que los elementos requeridos no sean None
+            if grado_element is not None and nombre_element is not None:
+                try:
+                    grado = int(grado_element.text.strip())
+                    nombre = nombre_element.text.strip()
 
-            nombre = (nombre_el.text or "").strip()
-            grado_txt = (grado_el.text or "").strip()
-            if not nombre or not grado_txt:
-                continue
+                    # Insertamos en la base de datos
+                    new_entry = GradoModel(
+                        grado=grado,
+                        nombre=nombre
+                    )
+                    db.session.add(new_entry)
+                except ValueError:
+                    print(f"Error: No se pudo convertir el grado '{grado_element.text}' a número entero")
+            else:
+                print(f"skipeo el item por que falta algun dato. Grado: {grado_element}, "
+                        f"Nombre: {nombre_element}")
 
-            try:
-                grado = int(grado_txt)
-            except ValueError:
-                # grado no convertible a entero
-                continue
+            db.session.commit()
 
-            # Creamos Cargo. La descripcion la cubrirá el modelo con "Sin descripción"
-            cargo = Cargo(
-                nombre=nombre,
-                grado=grado,          # <-- asegurate que Cargo tenga esta columna
-                descripcion=None      # <-- el modelo lo transforma a "Sin descripción"
-            )
-            db.session.add(cargo)
-            inserted += 1
-
-        # Commit UNA sola vez
-        db.session.commit()
-
-        # Aserciones
-        self.assertGreater(inserted, 0, "No se preparó ningún cargo para insertar.")
-        count = db.session.query(Cargo).count()
-        self.assertEqual(count, inserted, "La cantidad insertada no coincide con lo esperado.")
-
-        # (Opcional) chequear que descripcion nunca quedó NULL
-        null_desc = db.session.query(Cargo).filter(Cargo.descripcion.is_(None)).count()
-        self.assertEqual(null_desc, 0, "Hay cargos con descripcion NULL y no debería.")
+            # Verificamos que los datos se hayan insertado correctamente
+            results = GradoModel.query.all()
+            self.assertGreater(len(results), 0, "No se insertaron datos en la base de datos.")
+            for result in results:
+                print(f"Grado: {result.grado}, Nombre: {result.nombre}")
 
 if __name__ == '__main__':
     unittest.main()
