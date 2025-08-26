@@ -10,3 +10,5 @@ from .departamento_mapping import DepartamentoMapping
 from .tipoespecialidad_mapping import TipoEspecialidadMapping
 from .plan_mapping import PlanMapping
 from .cargo_mapping import CargoMapping
+from .alumno_mapping import AlumnoMapping
+from .facultad_mapping import FacultadMapping

@@ -1,21 +1,18 @@
-# app/config/config.py
 import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-# --- .env loading ---
 basedir = Path(__file__).resolve().parents[2]
 dotenv_path = basedir / '.env'
 load_dotenv(dotenv_path)
 
-# Logs de ayuda solo en dev (podés comentar estas líneas si molestan)
+# Logs de ayuda 
 if os.getenv("FLASK_CONTEXT", "development") == "development":
     print(">>> Cargando config.py")
     print(">>> .env:", dotenv_path)
     print(">>> FLASK_CONTEXT:", os.getenv("FLASK_CONTEXT"))
     print(">>> DEV_DATABASE_URI:", os.getenv("DEV_DATABASE_URI"))
 
-# app/config/config.py
 class Config(object):
     TESTING = False
     SQLALCHEMY_TRACK_MODIFICATIONS = False

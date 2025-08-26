@@ -15,4 +15,6 @@ from .cargo import Cargo
 from .orientacion import Orientacion
 from .autoridad import Autoridad
 from .facultad import Facultad
+from .localidad import Localidad
+from .pais import Pais
 GradoModel = Grado
