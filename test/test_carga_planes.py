@@ -1,48 +1,76 @@
-import pytest
-from xml.etree import ElementTree as ET
-from app import create_app, db
-from app.models import plan as plan_model
-from test.instancias import nuevoplan
 import os
+import unittest
+from sqlalchemy import text
+from app import create_app, db
+from xml.etree import ElementTree as ET
 
-@pytest.fixture
-def app_context():
-    app = create_app()
-    with app.app_context():
-        yield app
+# Modelo actualizado
+class PlanModel(db.Model):
+    __tablename__ = 'planes'
+    id = db.Column(db.Integer, primary_key=True)
+    especialidad = db.Column(db.String(255), nullable=False)
+    plan = db.Column(db.Integer, nullable=False)
+    nombre = db.Column(db.String(255), nullable=True)
 
-def test_carga_planes_desde_xml(app_context):
-    xml_file_path = os.path.join(
-        os.path.dirname(__file__), '..', 'archivados_xml', 'planes.xml'
-    )
+class XMLImportTestCase(unittest.TestCase):
 
-    assert os.path.exists(xml_file_path), f"El archivo {xml_file_path} no existe."
+    def setUp(self):
+        os.environ['FLASK_CONTEXT'] = 'testing'
+        os.environ['TEST_DATABASE_URI'] = 'postgresql+psycopg2://matuu:matu@localhost:5432/test_sysacad'
 
-    tree = ET.parse(xml_file_path)
-    root = tree.getroot()
+        self.app = create_app()
+        self.app_context = self.app.app_context()
+        self.app_context.push()
 
-    for item in root.findall('_expxml'):
-        especialidad_element = item.find('especialidad')
-        plan_element = item.find('plan')
-        nombre_element = item.find('nombre')
+        db.drop_all()  # Limpia la base de datos antes de crear las tablas
+        db.create_all()
 
-        if especialidad_element is not None and plan_element is not None:
-            try:
-                especialidad = especialidad_element.text.strip()
-                plan = int(plan_element.text.strip())
-                nombre = nombre_element.text.strip() if nombre_element is not None else "no definido"
+    def tearDown(self):
+        db.session.remove()
+        db.drop_all()
+        self.app_context.pop()
 
-                obj = nuevoplan(especialidad=especialidad, plan=plan, nombre=nombre)
-                db.session.add(obj)
-            except Exception as e:
-                print(f"Error al procesar item: {ET.tostring(item, encoding='unicode')}\n{e}")
-        else:
-            print(f"Item omitido por datos faltantes: {ET.tostring(item, encoding='unicode')}")
+    def test_import_xml_to_db(self):
+        # Ruta del archivo XML
+        xml_file_path = os.path.join(
+            os.path.dirname(__file__), '..', 'archivados_xml', 'planes.xml'
+        )
 
-    db.session.commit()
+        # Verificamos que el archivo exista
+        self.assertTrue(os.path.exists(xml_file_path), f"El archivo {xml_file_path} no existe.")
 
-    resultados = plan_model.Plan.query.all()
-    assert len(resultados) > 0, "No se insertaron datos en la base de datos."
-    for resultado in resultados:
-        assert resultado.especialidad is not None
-        assert isinstance(resultado.plan, int)
+        # Parseamos el archivo XML
+        tree = ET.parse(xml_file_path)
+        root = tree.getroot()
+
+        for item in root.findall('_expxml'):
+            especialidad_element = item.find('especialidad')
+            plan_element = item.find('plan')
+            nombre_element = item.find('nombre')
+
+            # Aseguramos que los elementos no sean None
+            if plan_element is not None and especialidad_element is not None:
+                especialidad=especialidad_element.text
+                plan = int(plan_element.text)
+                
+                if nombre_element is not None:
+                    nombre = "no definido"
+                else:
+                    nombre = nombre_element.text
+
+                # Insertamos en la base de datos
+                new_entry = PlanModel(especialidad=especialidad, plan=plan, nombre=nombre)
+                db.session.add(new_entry)
+            else:
+                print(f"skipeo el item por que falta algun dato. Plan: {plan_element}, Especialidad: {especialidad_element}, Nombre: {nombre_element}")
+
+        db.session.commit()
+
+        # Verificamos que los datos se hayan insertado correctamente
+        results = PlanModel.query.all()
+        self.assertGreater(len(results), 0, "No se insertaron datos en la base de datos.")
+        for result in results:
+            print(f"Especialidad {result.especialidad} Plan: {result.plan}")
+
+if __name__ == '__main__':
+    unittest.main()

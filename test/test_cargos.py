@@ -1,54 +1,81 @@
-import pytest
-from xml.etree import ElementTree as ET
-from app import create_app, db
-from app.models import cargo as cargo_model
-from test.instancias import nuevacargo
 import os
+import unittest
+from xml.etree import ElementTree as ET
 
-@pytest.fixture
-def app_context():
-    app = create_app()
-    with app.app_context():
-        yield app
+from app import create_app, db
+from app.models.cargo import Cargo  # <-- usamos el modelo real
 
-def test_carga_cargos_desde_xml(app_context):
-    xml_file_path = os.path.join(
-        os.path.dirname(__file__), '..', 'archivados_xml', 'grados.xml'
-    )
-    assert os.path.exists(xml_file_path), f"El archivo {xml_file_path} no existe."
+class XMLImportTestCase(unittest.TestCase):
+    def setUp(self):
+        # Config de test
+        os.environ['FLASK_CONTEXT'] = 'testing'
+        os.environ['TEST_DATABASE_URI'] = 'postgresql+psycopg2://matuu:matu@localhost:5432/test_sysacad'
 
-    with open(xml_file_path, 'r', encoding='windows-1252') as f:
-        tree = ET.parse(f)
-    root = tree.getroot()
+        self.app = create_app()
+        self.app_context = self.app.app_context()
+        self.app_context.push()
 
-    inserted = 0
+        db.drop_all()
+        db.create_all()
 
-    for item in root.findall('_expxml'):
-        grado_el = item.find('grado')
-        nombre_el = item.find('nombre')
+    def tearDown(self):
+        db.session.remove()
+        db.drop_all()
+        self.app_context.pop()
 
-        if grado_el is None or nombre_el is None:
-            continue
+    def test_import_xml_to_db(self):
+        # Ruta del XML de grados (lo usamos para poblar cargos)
+        xml_file_path = os.path.join(
+            os.path.dirname(__file__), '..', 'archivados_xml', 'grados.xml'
+        )
+        self.assertTrue(os.path.exists(xml_file_path), f"El archivo {xml_file_path} no existe.")
 
-        nombre = (nombre_el.text or "").strip()
-        grado_txt = (grado_el.text or "").strip()
-        if not nombre or not grado_txt:
-            continue
+        # Parseo
+        tree = ET.parse(xml_file_path)
+        root = tree.getroot()
 
-        try:
-            grado = int(grado_txt)
-        except ValueError:
-            continue
+        inserted = 0
 
-        cargo = nuevacargo(nombre=nombre, grado=grado, descripcion="Sin descripción")
-        db.session.add(cargo)
-        inserted += 1
+        # En tu XML los ítems son <_expxml> con hijos <grado> y <nombre>
+        for item in root.findall('_expxml'):
+            grado_el = item.find('grado')
+            nombre_el = item.find('nombre')
 
-    db.session.commit()
+            if grado_el is None or nombre_el is None:
+                # faltan datos, lo salteamos
+                continue
 
-    resultados = cargo_model.Cargo.query.all()
-    assert inserted > 0, "No se preparó ningún cargo para insertar."
-    assert len(resultados) == inserted, f"Se esperaban {inserted} cargos, pero hay {len(resultados)}."
+            nombre = (nombre_el.text or "").strip()
+            grado_txt = (grado_el.text or "").strip()
+            if not nombre or not grado_txt:
+                continue
 
-    sin_descripcion = [c for c in resultados if c.descripcion is None]
-    assert len(sin_descripcion) == 0, "Hay cargos con descripción NULL y no debería."
+            try:
+                grado = int(grado_txt)
+            except ValueError:
+                # grado no convertible a entero
+                continue
+
+            # Creamos Cargo. La descripcion la cubrirá el modelo con "Sin descripción"
+            cargo = Cargo(
+                nombre=nombre,
+                grado=grado,          # <-- asegurate que Cargo tenga esta columna
+                descripcion=None      # <-- el modelo lo transforma a "Sin descripción"
+            )
+            db.session.add(cargo)
+            inserted += 1
+
+        # Commit UNA sola vez
+        db.session.commit()
+
+        # Aserciones
+        self.assertGreater(inserted, 0, "No se preparó ningún cargo para insertar.")
+        count = db.session.query(Cargo).count()
+        self.assertEqual(count, inserted, "La cantidad insertada no coincide con lo esperado.")
+
+        # (Opcional) chequear que descripcion nunca quedó NULL
+        null_desc = db.session.query(Cargo).filter(Cargo.descripcion.is_(None)).count()
+        self.assertEqual(null_desc, 0, "Hay cargos con descripcion NULL y no debería.")
+
+if __name__ == '__main__':
+    unittest.main()

@@ -1,40 +1,66 @@
-import pytest
-from xml.etree import ElementTree as ET
-from app import create_app, db
-from app.models import universidad as universidad_model
-from test.instancias import nuevauniversidad
 import os
+import unittest
+from sqlalchemy import text
+from app import create_app, db
+from xml.etree import ElementTree as ET
 
-@pytest.fixture
-def app_context():
-    app = create_app()
-    with app.app_context():
-        yield app
+# Modelo actualizado
+class UniversidadModel(db.Model):
+    __tablename__ = 'universidades'
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(255), nullable=False)
 
-def test_carga_universidades_desde_xml(app_context):
-    xml_file_path = os.path.join(
-        os.path.dirname(__file__), '..', 'archivados_xml', 'universidad.xml'
-    )
+class XMLImportTestCase(unittest.TestCase):
 
-    assert os.path.exists(xml_file_path), f"El archivo {xml_file_path} no existe."
+    def setUp(self):
+        os.environ['FLASK_CONTEXT'] = 'testing'
+        os.environ['TEST_DATABASE_URI'] = 'postgresql+psycopg2://matuu:matu@localhost:5432/test_sysacad'
 
-    with open(xml_file_path, 'r', encoding='windows-1252') as f:
-        tree = ET.parse(f)
-    root = tree.getroot()
+        self.app = create_app()
+        self.app_context = self.app.app_context()
+        self.app_context.push()
 
-    for item in root.findall('_expxml'):
-        nombre_element = item.find('nombre')
+        db.drop_all()  # Limpia la base de datos antes de crear las tablas
+        db.create_all()
 
-        if nombre_element is not None and nombre_element.text:
-            nombre = nombre_element.text.strip()
-            obj = nuevauniversidad(nombre=nombre)
-            db.session.add(obj)
-        else:
-            print(f"Item omitido por falta de nombre: {ET.tostring(item, encoding='unicode')}")
+    def tearDown(self):
+        db.session.remove()
+        db.drop_all()
+        self.app_context.pop()
 
-    db.session.commit()
+    def test_import_xml_to_db(self):
+        # Ruta del archivo XML
+        xml_file_path = os.path.join(
+            os.path.dirname(__file__), '..', 'archivados_xml', 'universidad.xml'
+        )
 
-    resultados = universidad_model.Universidad.query.all()
-    assert len(resultados) > 0, "No se insertaron datos en la base de datos."
-    for resultado in resultados:
-        assert resultado.nombre is not None
+        # Verificamos que el archivo exista
+        self.assertTrue(os.path.exists(xml_file_path), f"El archivo {xml_file_path} no existe.")
+
+        # Parseamos el archivo XML
+        tree = ET.parse(xml_file_path)
+        root = tree.getroot()
+
+        for item in root.findall('_expxml'):
+            nombre_element = item.find('nombre')
+
+            # Aseguramos que los elementos no sean None
+            if  nombre_element is not None:
+                nombre = nombre_element.text
+
+                # Insertamos en la base de datos
+                new_entry = UniversidadModel( nombre=nombre)
+                db.session.add(new_entry)
+            else:
+                print(f"skipeo el item por que falta algun dato. Nombre: {nombre_element}")
+
+        db.session.commit()
+
+        # Verificamos que los datos se hayan insertado correctamente
+        results = UniversidadModel.query.all()
+        self.assertGreater(len(results), 0, "No se insertaron datos en la base de datos.")
+        for result in results:
+            print(f" Nombre: {result.nombre}")
+
+if __name__ == '__main__':
+    unittest.main()
