@@ -44,7 +44,7 @@ class CertificadoTestCase(unittest.TestCase):
 
     def test_certificado(self):
         client = self.app.test_client()
-        response = client.get(f"/api/v1/certificado/{self.nro_legajo}/docx")
+        response = client.get(f"sys/certificado/{self.nro_legajo}/docx")
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
