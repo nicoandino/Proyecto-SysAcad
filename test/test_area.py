@@ -25,13 +25,13 @@ class AreaTestCase(unittest.TestCase):
         self.assertIsNotNone(area)
         self.assertIsNotNone(area.id)
         self.assertGreaterEqual(area.id, 1)
-        self.assertEqual(area.nombre, "Matematica")
+        self.assertEqual(area.nombre, "Area Académica")
 
     def test_buscar_por_id(self):
         area = nuevaarea()
         r = AreaService.buscar_por_id(area.id)
         self.assertIsNotNone(r)
-        self.assertEqual(r.nombre, "Matematica")
+        self.assertEqual(r.nombre, "Area Académica")
 
     def test_buscar_todos(self):
         area1 = nuevaarea("Matematica")

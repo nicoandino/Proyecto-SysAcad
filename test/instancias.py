@@ -35,11 +35,15 @@ def nuevodepartamento(**kwargs):
     )
 
 # Área
-def nuevaarea(**kwargs):
-    return Area(
-        nombre=kwargs.get("nombre", "Área Académica")
-    )
+from app import db
+from app.models.area import Area
 
+
+def nuevaarea(nombre="Area Académica", **kwargs):
+    area = Area(nombre=nombre)
+    db.session.add(area)
+    db.session.commit()
+    return area
 # Grado
 def nuevogrado(**kwargs):
     return Grado(
