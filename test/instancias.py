@@ -144,16 +144,20 @@ def nuevacategoriacargo(**kwargs):
 
 #Cargo
 def nuevocargo(**kwargs):
+    categoria = kwargs.get("categoria_cargo") or nuevacategoriacargo()
+    dedicacion = kwargs.get("tipo_dedicacion") or nuevotipodedicacion(nombre="Dedicacion Completa")
     cargo = Cargo(
-        nombre=kwargs.get("nombre", "Cargo de prueba"),
+        nombre=kwargs.get("nombre", "Profesor"),
         descripcion=kwargs.get("descripcion", "Sin descripción"),
         grado=kwargs.get("grado"),
-        categoria_cargo=kwargs.get("categoria_cargo"),
-        tipo_dedicacion=kwargs.get("tipo_dedicacion")
+        categoria_cargo=categoria,
+        tipo_dedicacion=dedicacion
     )
     db.session.add(cargo)
     db.session.commit()
     return cargo
+
+
 
 
 # Autoridad

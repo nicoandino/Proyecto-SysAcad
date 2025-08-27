@@ -16,7 +16,7 @@ class CargoRepository:
 
     @staticmethod
     def buscar_por_id(id: int) -> Cargo:
-        return db.session.query(Cargo).filter_by(idCargo=id).first()
+        return db.session.query(Cargo).filter_by(id=id).first()
 
     @staticmethod
     def buscar_todos() -> list[Cargo]:
@@ -36,7 +36,7 @@ class CargoRepository:
 
     @staticmethod
     def borrar_por_id(id: int) -> Cargo:
-        cargo = db.session.query(Cargo).filter_by(idCargo=id).first()
+        cargo = db.session.query(Cargo).filter_by(id=id).first()
         if not cargo:
             return None
         db.session.delete(cargo)
