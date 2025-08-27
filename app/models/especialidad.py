@@ -25,3 +25,5 @@ class Especialidad(db.Model):
         nullable=True   # <--- ahora acepta NULL
     )
     facultad = db.relationship('Facultad', lazy=True)
+    materias = db.relationship("Materia", back_populates="especialidad")
+

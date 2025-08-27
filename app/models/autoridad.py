@@ -11,7 +11,6 @@ class Autoridad(db.Model):
     nombre: str = db.Column(db.String(100), nullable=False)
     telefono: str = db.Column(db.String(20), nullable=True)
     email: str = db.Column(db.String(100), nullable=True)
-
     cargo_id: int = db.Column(db.Integer, db.ForeignKey('cargos.id'), nullable=False)
     cargo = db.relationship('Cargo',  lazy=True) 
 

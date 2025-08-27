@@ -14,7 +14,18 @@ def nuevauniversidad(**kwargs):
 
 # Facultad
 def nuevafacultad(**kwargs):
-    return Facultad(
+    from app import db
+    from app.models.universidad import Universidad
+
+    # Si no te pasan universidad, creamos una dummy
+    universidad = kwargs.get("universidad")
+    if not universidad:
+        universidad = Universidad(nombre="Universidad X")
+        db.session.add(universidad)
+        db.session.commit()
+
+    facultad = Facultad(
+        facultad=kwargs.get("facultad", 0),  # campo obligatorio
         nombre=kwargs.get("nombre", "Facultad de Ciencias"),
         abreviatura=kwargs.get("abreviatura"),
         directorio=kwargs.get("directorio"),
@@ -25,8 +36,13 @@ def nuevafacultad(**kwargs):
         telefono=kwargs.get("telefono"),
         contacto=kwargs.get("contacto"),
         email=kwargs.get("email"),
-        codigo=kwargs.get("codigo")
+        universidad=universidad
     )
+
+    db.session.add(facultad)
+    db.session.commit()  # 🔹 genera el ID
+    return facultad
+
 
 # Departamento
 def nuevodepartamento(**kwargs):
@@ -58,14 +74,22 @@ def nuevogrupo(**kwargs):
 
 # Materia
 def nuevamateria(**kwargs):
-    return Materia(
-        especialidad=kwargs.get("especialidad"),
-        plan=kwargs.get("plan"),
-        materia=kwargs.get("materia", "MAT101"),
+    especialidad = kwargs.get("especialidad")
+    if not especialidad:
+        # Creamos una especialidad dummy para no violar el FK
+        especialidad = Especialidad(nombre="Especialidad Test")
+        db.session.add(especialidad)
+        db.session.commit()
+
+    materia = Materia(
         nombre=kwargs.get("nombre", "Álgebra"),
-        ano=kwargs.get("ano", 1),
-        observacion=kwargs.get("observacion", "Obligatoria")
+        codigo=kwargs.get("codigo", "MAT101"),
+        observacion=kwargs.get("observacion", "Obligatoria"),
+        especialidad_id=especialidad.id   # ✅ se guarda el FK válido
     )
+    db.session.add(materia)
+    db.session.commit()   # ✅ ahora materia.id ya no es None
+    return materia
 
 # Plan
 def nuevoplan(**kwargs):
@@ -118,18 +142,42 @@ def nuevacategoriacargo(**kwargs):
         nombre=kwargs.get("nombre", "Docente")
     )
 
+#Cargo
+def nuevocargo(**kwargs):
+    cargo = Cargo(
+        nombre=kwargs.get("nombre", "Cargo de prueba"),
+        descripcion=kwargs.get("descripcion", "Sin descripción"),
+        grado=kwargs.get("grado"),
+        categoria_cargo=kwargs.get("categoria_cargo"),
+        tipo_dedicacion=kwargs.get("tipo_dedicacion")
+    )
+    db.session.add(cargo)
+    db.session.commit()
+    return cargo
+
+
 # Autoridad
 def nuevaautoridad(**kwargs):
+    cargo_id = kwargs.get("cargo_id")
+    if not cargo_id:
+        cargo = nuevocargo(nombre="Cargo por defecto")
+        db.session.add(cargo)
+        db.session.commit()
+        cargo_id = cargo.id
+
     autoridad = Autoridad(
         nombre=kwargs.get("nombre", "Pelo"),
         telefono=kwargs.get("telefono", "123456789"),
         email=kwargs.get("email", "pelo@example.com"),
-        cargo_id=kwargs.get("cargo_id")
+        cargo_id=cargo_id
     )
     if "materias" in kwargs:
         autoridad.materias.extend(kwargs["materias"])
     if "facultades" in kwargs:
         autoridad.facultades.extend(kwargs["facultades"])
+
+    db.session.add(autoridad)
+    db.session.commit()
     return autoridad
 
 # Alumno

@@ -1,4 +1,5 @@
 import unittest
+from test.instancias import nuevaautoridad, nuevamateria, nuevafacultad, nuevocargo
 from app import create_app, db
 from app.models import Autoridad, Materia
 from app.services import AutoridadService
@@ -19,14 +20,18 @@ class AutoridadTestCase(unittest.TestCase):
     def test_crear(self):
         facultad = nuevafacultad()
         materia = nuevamateria()
-        autoridad = nuevaautoridad(materias=[materia], facultades=[facultad])
+        cargo = nuevocargo()  # ✅ ahora existe cargo_id válido
+
+        autoridad = nuevaautoridad(
+            materias=[materia],
+            facultades=[facultad],
+            cargo_id=cargo.id
+        )
+
         self.assertIsNotNone(autoridad.id)
         self.assertEqual(autoridad.nombre, "Pelo")
-        # pyrefly: ignore  # bad-argument-type
         self.assertIn(materia, autoridad.materias)
-        # pyrefly: ignore  # bad-argument-type
         self.assertIn(facultad, autoridad.facultades)
-        
 
     def test_buscar_por_id(self):
         autoridad = nuevaautoridad()
