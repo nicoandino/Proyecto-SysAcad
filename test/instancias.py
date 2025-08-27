@@ -138,9 +138,12 @@ def nuevacargo(**kwargs):
 
 # Categoría de Cargo
 def nuevacategoriacargo(**kwargs):
-    return CategoriaCargo(
+    categoria = CategoriaCargo(
         nombre=kwargs.get("nombre", "Docente")
     )
+    db.session.add(categoria)
+    db.session.commit()
+    return categoria
 
 #Cargo
 def nuevocargo(**kwargs):
