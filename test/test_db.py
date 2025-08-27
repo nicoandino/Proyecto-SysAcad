@@ -11,7 +11,7 @@ class ConnectionTestCase(unittest.TestCase):
     def setUp(self):
         # Configuramos el entorno de testing
         os.environ['FLASK_CONTEXT'] = 'testing'
-        os.environ['TEST_DATABASE_URI'] = 'sqlite:///:memory:'  # Base de datos en memoria
+        #os.environ['TEST_DATABASE_URI'] = 'sqlite:///:memory:'  # Base de datos en memoria
 
         # Creamos la app y el contexto
         self.app = create_app()
