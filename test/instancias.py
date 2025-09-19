@@ -44,11 +44,11 @@ def nuevafacultad(**kwargs):
     return facultad
 
 
-# Departamento
-def nuevodepartamento(**kwargs):
-    return Departamento(
-        nombre=kwargs.get("nombre", "Departamento Genérico")
-    )
+def nuevodepartamento(nombre="Matematicas"):
+    from app.models import Departamento
+    from app.services import DepartamentoService
+    dep = Departamento(nombre=nombre)
+    return DepartamentoService.crear(dep)
 
 # Área
 from app import db

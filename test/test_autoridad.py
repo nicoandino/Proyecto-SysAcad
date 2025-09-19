@@ -32,6 +32,7 @@ class AutoridadTestCase(unittest.TestCase):
         self.assertEqual(autoridad.nombre, "Pelo")
         self.assertIn(materia, autoridad.materias)
         self.assertIn(facultad, autoridad.facultades)
+    
 
     def test_buscar_por_id(self):
         autoridad = nuevaautoridad()

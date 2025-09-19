@@ -4,14 +4,11 @@ from app.models import Departamento
 class DepartamentoRepository:
 
     @staticmethod
-    def crear(departamento):
-        """
-        Crea un nuevo departamento en la base de datos.
-        :param departamento: Objeto Departamento a crear.
-        :return: Objeto Departamento creado.
-        """
+    def crear(departamento: Departamento) -> Departamento:
         db.session.add(departamento)
-        db.session.commit()
+        db.session.flush()   # asigna el id sin cerrar la transacción
+        db.session.commit()  # confirma los cambios
+        return departamento  # ← devolver la instancia con id
 
     @staticmethod
     def buscar_por_id(id: int):
@@ -30,17 +27,6 @@ class DepartamentoRepository:
         """
         return db.session.query(Departamento).all()
     
-    @staticmethod
-    def actualizar(departamento) -> Departamento:
-        """
-        Actualiza un departamento existente en la base de datos.
-        :param departamento: Objeto Departamento con los nuevos datos.
-        :return: Objeto Departamento actualizado.
-        """
-        departamento_existente = db.session.merge(departamento)
-        if not departamento_existente:
-            return None
-        return departamento_existente
     
     @staticmethod
     def borrar_por_id(id: int) -> Departamento:
@@ -55,3 +41,17 @@ class DepartamentoRepository:
         db.session.delete(departamento)
         db.session.commit()
         return departamento
+
+    @staticmethod
+    def guardar(dep: Departamento) -> Departamento:
+        db.session.flush()
+        db.session.commit()
+        return dep
+
+    @staticmethod
+    def actualizar(departamento: Departamento) -> Departamento | None:
+        existente = db.session.merge(departamento)
+        db.session.flush()
+        db.session.commit()
+        return existente
+
