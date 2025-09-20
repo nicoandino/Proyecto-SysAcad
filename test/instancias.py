@@ -65,10 +65,19 @@ def nuevaarea(nombre="Area Académica", **kwargs):
     db.session.commit()
     return area
 # Grado
+# test/instancias.py
+from app import db
+from app.models.grado import Grado
+
 def nuevogrado(**kwargs):
-    return Grado(
-        nombre=kwargs.get("nombre", "Licenciatura")
+    g = Grado(
+        grado=kwargs.get("grado", 0),
+        nombre=kwargs.get("nombre", "Primero"),
+        descripcion=kwargs.get("descripcion", "Descripcion del primer grado")  # <- clave
     )
+    db.session.add(g)
+    db.session.commit()
+    return g
 
 # Grupo
 def nuevogrupo(**kwargs):
