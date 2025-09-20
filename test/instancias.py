@@ -12,20 +12,19 @@ def nuevauniversidad(**kwargs):
         nombre=kwargs.get("nombre", "Universidad Nacional de San Rafael")
     )
 
-# Facultad
-def nuevafacultad(**kwargs):
-    from app import db
-    from app.models.universidad import Universidad
+# test/instancias.py
+from app import db
+from app.models import Facultad, Universidad
 
-    # Si no te pasan universidad, creamos una dummy
+def nuevafacultad(**kwargs):
     universidad = kwargs.get("universidad")
     if not universidad:
-        universidad = Universidad(nombre="Universidad X")
+        universidad = Universidad(nombre=kwargs.get("universidad_nombre", "Universidad Nacional"))
         db.session.add(universidad)
-        db.session.commit()
+        db.session.flush()
 
     facultad = Facultad(
-        facultad=kwargs.get("facultad", 0),  # campo obligatorio
+        facultad=kwargs.get("facultad", 0),
         nombre=kwargs.get("nombre", "Facultad de Ciencias"),
         abreviatura=kwargs.get("abreviatura"),
         directorio=kwargs.get("directorio"),
@@ -36,14 +35,19 @@ def nuevafacultad(**kwargs):
         telefono=kwargs.get("telefono"),
         contacto=kwargs.get("contacto"),
         email=kwargs.get("email"),
-        universidad=universidad
+        universidad=universidad,
     )
 
+    # 🔹 Asociar autoridades si vienen por parámetro
+    autoridades = kwargs.get("autoridades") or []
+    for aut in autoridades:
+        facultad.autoridades.append(aut)   # o facultad.asociar_autoridad(aut)
+
     db.session.add(facultad)
-    db.session.commit()  # 🔹 genera el ID
+    db.session.commit()
     return facultad
 
-
+# Departamento
 def nuevodepartamento(nombre="Matematicas"):
     from app.models import Departamento
     from app.services import DepartamentoService
