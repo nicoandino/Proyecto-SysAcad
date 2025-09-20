@@ -3,15 +3,12 @@ from app.models import TipoEspecialidad
 
 class TipoEspecialidadRepository:
     @staticmethod
-    def crear(tipoespecialidad):
-        """
-        Crea un nuevo tipo de especialidad en la base de datos.
-        :param tipoespecialidad: Objeto TipoEspecialidad a crear.
-        :return: Objeto TipoEspecialidad creado.
-        """
-        db.session.add(tipoespecialidad)
+    def crear(tipo):
+        db.session.add(tipo)
+        db.session.flush()
         db.session.commit()
-        
+        return tipo
+
     @staticmethod
     def buscar_por_id(id: int):
         """

@@ -99,20 +99,27 @@ def nuevoplan(**kwargs):
         nombre=kwargs.get("nombre", "Plan de Ingeniería")
     )
 
-# Tipo Especialidad
-def nuevotipoespecialidad(**kwargs):
-    return TipoEspecialidad(
-        nombre=kwargs.get("nombre", "General")
-    )
+from app.models import Especialidad, TipoEspecialidad
+from app.services import EspecialidadService, TipoEspecialidadService
 
-# Especialidad
-def nuevaespecialidad(**kwargs):
-    tipo = kwargs.get("tipoespecialidad") or nuevotipoespecialidad()
-    return Especialidad(
-        nombre=kwargs.get("nombre", "Matemáticas"),
-        letra=kwargs.get("letra", "A"),
-        tipoespecialidad=tipo
+
+# ---------- Tipo Especialidad ----------
+def nuevotipoespecialidad(**kwargs):
+    tipo = TipoEspecialidad(
+        nombre=kwargs.get("nombre", "Cardiologia")
     )
+    return TipoEspecialidadService.crear(tipo)   # devuelve instancia con id
+
+
+# ---------- Especialidad ----------
+def nuevaespecialidad(**kwargs):
+    tipo = kwargs.get("tipoespecialidad") or nuevotipoespecialidad(nombre="Cardiologia")
+    especialidad = Especialidad(
+        nombre=kwargs.get("nombre", "Matematicas"),  # sin tilde para pasar test
+        letra=kwargs.get("letra", "A"),
+        tipoespecialidad=tipo                       # relación, no mezclar con *_id
+    )
+    return EspecialidadService.crear(especialidad)  # devuelve instancia persistida con id
 
 # Orientación
 def nuevaorientacion(**kwargs):

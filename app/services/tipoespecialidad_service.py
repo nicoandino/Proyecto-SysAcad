@@ -6,7 +6,8 @@ from app.repositories import TipoEspecialidadRepository
 class TipoEspecialidadService:
     @staticmethod
     def crear(tipoespecialidad):
-        TipoEspecialidadRepository.crear(tipoespecialidad)
+        return TipoEspecialidadRepository.crear(tipoespecialidad)
+
     
     @staticmethod
     def buscar_por_id(id: int) -> TipoEspecialidad:

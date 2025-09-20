@@ -18,3 +18,6 @@ from .facultad import Facultad
 from .localidad import Localidad
 from .pais import Pais
 GradoModel = Grado
+from .especialidad import Especialidad
+from .tipoespecialidad import TipoEspecialidad
+__all__ = ["Especialidad", "TipoEspecialidad"]

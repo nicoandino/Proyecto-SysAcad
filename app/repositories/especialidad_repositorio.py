@@ -1,34 +1,37 @@
+# app/repositories/especialidad_repository.py
 from app import db
-from app.models import especialidad
+from app.models.especialidad import Especialidad
 
 class EspecialidadRepository:
 
     @staticmethod
-    def crear(especialidadd):
+    def crear(especialidadd: Especialidad) -> Especialidad:
         db.session.add(especialidadd)
+        db.session.flush()
         db.session.commit()
+        return especialidadd
 
     @staticmethod
-    def buscar_por_id(id: int):
-        return db.session.query(especialidad).filter_by(id=id).first()
+    def buscar_por_id(id: int) -> Especialidad | None:
+        return db.session.query(Especialidad).filter_by(id=id).first()
 
     @staticmethod
-    def buscar_todos():
-        return db.session.query(especialidad).all()
+    def buscar_todos() -> list[Especialidad]:
+        return db.session.query(Especialidad).all()
 
     @staticmethod
-    def actualizar(especialidad) -> especialidad:
-        especialidad_existente = db.session.merge(especialidad)
-        if not especialidad_existente:
+    def actualizar(especialidad: Especialidad) -> Especialidad | None:
+        existente = db.session.merge(especialidad)
+        if not existente:
             return None
-        return especialidad_existente
-    
-    @staticmethod
-    def borrar_por_id(id: int) -> especialidad:
-        especialidad = db.session.query(especialidad).filter_by(id=id).first()
-        if not especialidad:
-            return None
-        db.session.delete(especialidad)
         db.session.commit()
-        return especialidad
+        return existente
 
+    @staticmethod
+    def borrar_por_id(id: int) -> bool:
+        obj = db.session.query(Especialidad).filter_by(id=id).first()
+        if not obj:
+            return False
+        db.session.delete(obj)
+        db.session.commit()
+        return True
