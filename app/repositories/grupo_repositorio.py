@@ -1,28 +1,30 @@
+# app/repositories/grupo_repository.py
 from app import db
 from app.models import Grupo
 
 class GrupoRepository:
-    
     @staticmethod
-    def crear(grupo):
+    def crear(grupo: Grupo) -> Grupo:
         db.session.add(grupo)
+        db.session.flush()      # asegura que grupo.id se asigne
         db.session.commit()
+        return grupo            # <- devolver instancia
 
     @staticmethod
-    def buscar_por_id(id: int):
+    def buscar_por_id(id: int) -> Grupo | None:
         return db.session.query(Grupo).filter_by(id=id).first()
     
     @staticmethod
-    def buscar_todos():
+    def buscar_todos() -> list[Grupo]:
         return db.session.query(Grupo).all()
     
     @staticmethod
-    def actualizar(grupo) -> Grupo:
-        grupo_existente = db.session.merge(grupo)
-        if not grupo_existente:
-            # pyrefly: ignore  # bad-return
+    def actualizar(grupo: Grupo) -> Grupo | None:
+        existente = db.session.merge(grupo)
+        if not existente:
             return None
-        return grupo_existente
+        db.session.commit()     # <- persistir cambios
+        return existente
     
     @staticmethod
     def borrar_por_id(id: int) -> bool:

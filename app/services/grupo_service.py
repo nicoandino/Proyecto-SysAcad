@@ -1,14 +1,14 @@
+# app/services/grupo_service.py
 from app.models import Grupo
-from app.repositories import GrupoRepository
+from app.repositories.grupo_repositorio import GrupoRepository  # <- import explícito
 
 class GrupoService:
     @staticmethod
-    def crear(grupo):
-        GrupoRepository.crear(grupo)
+    def crear(grupo: Grupo) -> Grupo:
+        return GrupoRepository.crear(grupo)  # <- devolver
 
     @staticmethod
-    def buscar_por_id(id: int) -> Grupo:
-        # pyrefly: ignore  # bad-return
+    def buscar_por_id(id: int) -> Grupo | None:
         return GrupoRepository.buscar_por_id(id)
 
     @staticmethod
@@ -16,14 +16,13 @@ class GrupoService:
         return GrupoRepository.buscar_todos()
     
     @staticmethod
-    def actualizar(id: int, grupo: Grupo) -> Grupo:
-        grupo_existente = GrupoRepository.buscar_por_id(id)
-        if not grupo_existente:
-            # pyrefly: ignore  # bad-return
+    def actualizar(id: int, grupo: Grupo) -> Grupo | None:
+        existente = GrupoRepository.buscar_por_id(id)
+        if not existente:
             return None
-        grupo_existente.nombre = grupo.nombre
-        return grupo_existente
-    
+        existente.nombre = grupo.nombre
+        return GrupoRepository.actualizar(existente)  # hace commit
+
     @staticmethod
     def borrar_por_id(id: int) -> bool:
         return GrupoRepository.borrar_por_id(id)

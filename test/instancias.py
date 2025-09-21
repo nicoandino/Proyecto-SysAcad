@@ -81,10 +81,12 @@ def nuevogrado(**kwargs):
 
 # Grupo
 def nuevogrupo(**kwargs):
-    return Grupo(
-        nombre=kwargs.get("nombre", "Grupo 1")
+    g = Grupo(
+        nombre=kwargs.get("nombre", "Grupo A")   # el test espera "Grupo A"
     )
-
+    db.session.add(g)
+    db.session.commit()  # guarda en la DB y asigna id
+    return g
 # Materia
 def nuevamateria(**kwargs):
     especialidad = kwargs.get("especialidad")
