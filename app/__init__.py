@@ -31,25 +31,24 @@ def create_app() -> Flask:
                 if desc is None or not str(desc).strip():
                     setattr(obj, "descripcion", (getattr(obj, "nombre", "") or "").strip())
 
-    # --- Blueprints ---
-    from app.resources import (
-        home,
-        universidad_bp,
-        area_bp,
-        tipodocumento_bp,
-        tipodedicacion_bp,
-        categoriacargo_bp,
-        grupo_bp,
-        grado_bp,
-        departamento_bp,
-        certificado_bp,
-        tipo_especialidad_bp,
-        plan_bp,
-        cargo_bp,
-        alumno_bp
-    )
+    # --- Blueprints: importar explícitamente cada Blueprint ---
+    from app.resources.home import home as home_bp
+    from app.resources.universidad_resource import universidad_bp
+    from app.resources.area_resource import area_bp
+    from app.resources.tipodocumento_resource import tipodocumento_bp
+    from app.resources.tipodedicacion_resource import tipodedicacion_bp
+    from app.resources.categoriacargo_resource import categoriacargo_bp
+    from app.resources.grupo_resource import grupo_bp
+    from app.resources.grado_resource import grado_bp
+    from app.resources.departamento_resource import departamento_bp
+    from app.resources.certificado_resource import certificado_bp
+    #from app.resources.tipo_especialidad_resource import tipo_especialidad_bp
+    from app.resources.plan_resource import plan_bp
+    from app.resources.cargo_resource import cargo_bp
+    from app.resources.alumno_resource import alumno_bp
 
-    app.register_blueprint(home, url_prefix="/sys")
+    # --- Registro con prefijo /sys ---
+    app.register_blueprint(home_bp, url_prefix="/sys")
     app.register_blueprint(universidad_bp, url_prefix="/sys")
     app.register_blueprint(area_bp, url_prefix="/sys")
     app.register_blueprint(tipodocumento_bp, url_prefix="/sys")
@@ -59,7 +58,7 @@ def create_app() -> Flask:
     app.register_blueprint(grado_bp, url_prefix="/sys")
     app.register_blueprint(departamento_bp, url_prefix="/sys")
     app.register_blueprint(certificado_bp, url_prefix="/sys")
-    app.register_blueprint(tipo_especialidad_bp, url_prefix="/sys")
+    #app.register_blueprint(tipo_especialidad_bp, url_prefix="/sys")
     app.register_blueprint(plan_bp, url_prefix="/sys")
     app.register_blueprint(cargo_bp, url_prefix="/sys")
     app.register_blueprint(alumno_bp, url_prefix="/sys")

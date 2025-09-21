@@ -6,12 +6,14 @@ from app.models import (
     Area, Grado, Grupo, TipoDedicacion, TipoDocumento
 )
 
-# Universidad
 def nuevauniversidad(**kwargs):
-    return Universidad(
-        nombre=kwargs.get("nombre", "Universidad Nacional de San Rafael")
+    u = Universidad(
+        nombre=kwargs.get("nombre", "Universidad Nacional"),
+        sigla=kwargs.get("sigla", "UN")   # obligatorio por el Schema
     )
-
+    db.session.add(u)
+    db.session.commit()   # 🔹 asegura que tenga id
+    return u
 # Facultad
 from app import db
 from app.models import Facultad, Universidad

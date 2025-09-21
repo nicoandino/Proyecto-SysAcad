@@ -1,11 +1,11 @@
+# app/services/universidad_service.py
 from typing import Optional, List
 from app.models import Universidad
-from app.repositories.universidad_repositorio import UniversidadRepository
+from app.repositories.universidad_repositorio import UniversidadRepository  # ojo al nombre del módulo
 
 class UniversidadService:
     @staticmethod
     def crear(data: Universidad) -> Universidad:
-        # data es una instancia de Universidad ya validada
         return UniversidadRepository.crear(data)
 
     @staticmethod
@@ -18,14 +18,8 @@ class UniversidadService:
 
     @staticmethod
     def actualizar(id: int, data: Universidad) -> Optional[Universidad]:
-        """
-        Actualiza campos básicos de la universidad identificada por id,
-        usando el repo.merge() para evitar tener que cargarla primero.
-        """
-        # Aseguramos que la instancia a mergear tenga el id objetivo
         data.id = id
-        u = UniversidadRepository.actualizar_universidad(data)
-        return u
+        return UniversidadRepository.actualizar_universidad(data)
 
     @staticmethod
     def borrar_por_id(id: int) -> bool:

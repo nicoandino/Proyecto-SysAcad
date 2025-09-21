@@ -23,7 +23,7 @@ class IndexTestCase(unittest.TestCase):
         client = self.app.test_client(use_cookies=True)
         universidad = nuevauniversidad()
         universidad_mapping = UniversidadMapping()
-        response = client.get(f'http://localhost:5000/api/v1/universidad/{universidad.id}')
+        response = client.get(f'http://localhost:5000/sys/universidad/{universidad.id}')
         universidad_obtenida = universidad_mapping.load(response.get_json())
         # pyrefly: ignore  # missing-attribute
         self.assertEqual(universidad_obtenida.id, universidad.id)
@@ -35,7 +35,7 @@ class IndexTestCase(unittest.TestCase):
         universidad1 = nuevauniversidad()
         universidad2 = nuevauniversidad()
         universidad_mapping = UniversidadMapping()
-        response = client.get('http://localhost:5000/api/v1/universidad')
+        response = client.get('http://localhost:5000/sys/universidad')
         universidades = universidad_mapping.load(response.get_json(), many=True)
         # pyrefly: ignore  # bad-argument-type
         self.assertEqual(len(universidades), 2)

@@ -20,6 +20,6 @@ class IndexTestCase(unittest.TestCase):
     def test_index(self):
         client = self.app.test_client(use_cookies=True)
 
-        response = client.get('http://localhost:5000/api/v1/')
+        response = client.get('http://localhost:5000/sys/')
         self.assertEqual(response.status_code, 200)
         
