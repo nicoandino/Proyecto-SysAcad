@@ -88,24 +88,34 @@ def nuevogrupo(**kwargs):
     db.session.commit()  # guarda en la DB y asigna id
     return g
 # Materia
-def nuevamateria(**kwargs):
+from app.services import MateriaService
+
+def nueva_materia(**kwargs) -> Materia:
+    return Materia(
+        nombre=kwargs.get("nombre", "Matematica"),
+        codigo=kwargs.get("codigo", "MAT101"),
+        observacion=kwargs.get("observacion", "Matematica basica"),
+    )
+
+# ✅ Crea y persiste en DB una Materia (con Especialidad dummy si no se pasa)
+def crear_materia_persistida(**kwargs) -> Materia:
     especialidad = kwargs.get("especialidad")
     if not especialidad:
-        # Creamos una especialidad dummy para no violar el FK
         especialidad = Especialidad(nombre="Especialidad Test")
         db.session.add(especialidad)
         db.session.commit()
 
     materia = Materia(
-        nombre=kwargs.get("nombre", "Álgebra"),
+        nombre=kwargs.get("nombre", "Matematica"),
         codigo=kwargs.get("codigo", "MAT101"),
-        observacion=kwargs.get("observacion", "Obligatoria"),
-        especialidad_id=especialidad.id   # ✅ se guarda el FK válido
+        observacion=kwargs.get("observacion", "Matematica basica"),
+        especialidad_id=especialidad.id,
     )
-    db.session.add(materia)
-    db.session.commit()   # ✅ ahora materia.id ya no es None
-    return materia
+    return MateriaService.crear_materia(materia)
 
+# 🔁 Alias para compatibilidad con tests que importan "nuevamateria"
+def nuevamateria(**kwargs):
+    return nueva_materia(**kwargs)
 # Plan
 def nuevoplan(**kwargs):
     return Plan(

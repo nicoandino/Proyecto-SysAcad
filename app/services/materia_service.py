@@ -1,14 +1,28 @@
+from app import db
 from app.models import Materia
 from app.repositories import MateriaRepository, AutoridadRepository
 
 class MateriaService:
+    # ===== Métodos con los nombres que usa el test =====
     @staticmethod
-    def crear(materia):
-       MateriaRepository.crear(materia)
+    def crear_materia(materia: Materia) -> Materia:
+        return MateriaRepository.crear(materia)
 
     @staticmethod
-    def buscar_por_id(id: int) -> Materia:
-        # pyrefly: ignore  # bad-return
+    def actualizar_materia(id: int, datos: Materia) -> Materia | None:
+        existente = MateriaRepository.buscar_por_id(id)
+        if not existente:
+            return None
+        # Actualizamos campos simples
+        existente.nombre = datos.nombre
+        existente.codigo = datos.codigo
+        existente.observacion = datos.observacion
+        db.session.flush()
+        db.session.commit()
+        return existente
+
+    @staticmethod
+    def buscar_por_id(id: int) -> Materia | None:
         return MateriaRepository.buscar_por_id(id)
 
     @staticmethod
@@ -16,22 +30,19 @@ class MateriaService:
         return MateriaRepository.buscar_todos()
 
     @staticmethod
-    def actualizar(id: int, materia: Materia) -> Materia:
-        materia_existente = MateriaRepository.buscar_por_id(id)
-        if not materia_existente:
-            # pyrefly: ignore  # bad-return
-            return None
-        materia_existente.nombre = materia.nombre
-        materia_existente.codigo = materia.codigo
-        materia_existente.observacion = materia.observacion
-        return materia_existente
+    def borrar_por_id(id: int) -> bool:
+        return MateriaRepository.borrar_por_id(id) is not None
+
+    # ===== Alias para compatibilidad hacia atrás (si en otro lado usabas crear/actualizar) =====
+    @staticmethod
+    def crear(materia: Materia) -> Materia:
+        return MateriaService.crear_materia(materia)
 
     @staticmethod
-    def borrar_por_id(id: int) -> bool:
-        return MateriaRepository.borrar_por_id(id)
+    def actualizar(id: int, datos: Materia) -> Materia | None:
+        return MateriaService.actualizar_materia(id, datos)
 
-
-
+    # ===== Asociaciones Autoridad <-> Materia (sin cambios) =====
     @staticmethod
     def asociar_autoridad(materia_id: int, autoridad_id: int):
         materia = MateriaRepository.buscar_por_id(materia_id)
