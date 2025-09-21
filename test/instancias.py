@@ -12,7 +12,7 @@ def nuevauniversidad(**kwargs):
         nombre=kwargs.get("nombre", "Universidad Nacional de San Rafael")
     )
 
-# test/instancias.py
+# Facultad
 from app import db
 from app.models import Facultad, Universidad
 
@@ -87,9 +87,11 @@ def nuevogrupo(**kwargs):
     db.session.add(g)
     db.session.commit()  # guarda en la DB y asigna id
     return g
+
 # Materia
 from app.services import MateriaService
 
+# Mantener estas dos funciones como estaban:
 def nueva_materia(**kwargs) -> Materia:
     return Materia(
         nombre=kwargs.get("nombre", "Matematica"),
@@ -97,7 +99,6 @@ def nueva_materia(**kwargs) -> Materia:
         observacion=kwargs.get("observacion", "Matematica basica"),
     )
 
-# ✅ Crea y persiste en DB una Materia (con Especialidad dummy si no se pasa)
 def crear_materia_persistida(**kwargs) -> Materia:
     especialidad = kwargs.get("especialidad")
     if not especialidad:
@@ -113,9 +114,9 @@ def crear_materia_persistida(**kwargs) -> Materia:
     )
     return MateriaService.crear_materia(materia)
 
-# 🔁 Alias para compatibilidad con tests que importan "nuevamateria"
+# 🔁 Cambiar el alias para que devuelva la versión PERSISTIDA:
 def nuevamateria(**kwargs):
-    return nueva_materia(**kwargs)
+    return crear_materia_persistida(**kwargs)
 # Plan
 def nuevoplan(**kwargs):
     return Plan(
@@ -147,13 +148,57 @@ def nuevaespecialidad(**kwargs):
     return EspecialidadService.crear(especialidad)  # devuelve instancia persistida con id
 
 # Orientación
-def nuevaorientacion(**kwargs):
-    return Orientacion(
-        especialidad=kwargs.get("especialidad"),
-        plan=kwargs.get("plan"),
-        orientacion=kwargs.get("orientacion", "OR1"),
-        nombre=kwargs.get("nombre", "Orientación General")
+def nuevaorientacion(**kwargs) -> Orientacion:
+    # --- TipoEspecialidad ---
+    tipo = kwargs.get("tipoespecialidad")
+    if not tipo:
+        tipo = TipoEspecialidad(nombre="Cardiologia")
+        db.session.add(tipo)
+        db.session.flush()
+
+    # --- Especialidad ---
+    especialidad = kwargs.get("especialidad")
+    if not especialidad:
+        especialidad = Especialidad(
+            nombre=kwargs.get("nombre_especialidad", "Especialidad Test"),
+            letra=kwargs.get("letra_especialidad", "A"),
+            tipoespecialidad=tipo
+        )
+        db.session.add(especialidad)
+        db.session.flush()
+
+    # --- Plan ---
+    plan = kwargs.get("plan")
+    if not plan:
+        plan = Plan(
+            nombre=kwargs.get("nombre_plan", "Plan 2024"),
+            fecha_inicio=kwargs.get("fecha_inicio_plan", date(2024, 6, 4))
+        )
+        db.session.add(plan)
+        db.session.flush()
+
+    # --- Materia ---
+    materia = kwargs.get("materia")
+    if not materia:
+        materia = Materia(
+            nombre=kwargs.get("nombre_materia", "Desarrollo"),
+            codigo=kwargs.get("codigo_materia", "DES101"),
+            observacion=kwargs.get("obs_materia", "Materia de desarrollo")
+        )
+        db.session.add(materia)
+        db.session.flush()
+
+    # --- Orientacion ---
+    orientacion = Orientacion(
+        nombre=kwargs.get("nombre", "Orientacion 1"),
+        especialidad_id=especialidad.id,
+        plan_id=plan.id,
+        materia_id=materia.id
     )
+    db.session.add(orientacion)
+    db.session.commit()
+
+    return orientacion
 
 # País
 def nuevopais(**kwargs):
