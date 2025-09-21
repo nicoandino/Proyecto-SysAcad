@@ -316,16 +316,64 @@ def nuevoalumno(**kwargs):
     return Alumno(**datos)
 
 # Tipo Dedicación
-def nuevotipodedicacion(**kwargs):
-    return TipoDedicacion(
-        nombre=kwargs.get("nombre", "Exclusiva")
+
+def nuevotipodedicacion(*args, **kwargs) -> TipoDedicacion:
+    if args:
+        nombre = args[0] if len(args) > 0 else "Dedicacion Completa"
+        observacion = args[1] if len(args) > 1 else "Observacion de prueba"
+    else:
+        nombre = kwargs.get("nombre", "Dedicacion Completa")
+        observacion = kwargs.get("observacion", "Observacion de prueba")
+
+    td = TipoDedicacion(
+        nombre=nombre,
+        observacion=observacion,
     )
+    db.session.add(td)
+    db.session.commit()   # asegura td.id
+    return td
+
 
 # Tipo Documento
-def nuevotipodocumento(**kwargs):
-    return TipoDocumento(
-        dni=kwargs.get("dni", 50291002),
-        libreta_civica=kwargs.get("libreta_civica", "LC"),
-        libreta_enrolamiento=kwargs.get("libreta_enrolamiento", "LE"),
-        pasaporte=kwargs.get("pasaporte", "PAS")
+def nuevotipodocumento(*args, **kwargs) -> TipoDocumento:
+    if args:
+        dni = args[0] if len(args) > 0 else 46291002
+        libreta_civica = args[1] if len(args) > 1 else "nacional"
+        libreta_enrolamiento = args[2] if len(args) > 2 else "LE"
+        pasaporte = args[3] if len(args) > 3 else "PAS"
+    else:
+        dni = kwargs.get("dni", 46291002)
+        libreta_civica = kwargs.get("libreta_civica", "nacional")
+        libreta_enrolamiento = kwargs.get("libreta_enrolamiento", "LE")
+        pasaporte = kwargs.get("pasaporte", "PAS")
+
+    doc = TipoDocumento(
+        dni=dni,
+        libreta_civica=libreta_civica,
+        libreta_enrolamiento=libreta_enrolamiento,
+        pasaporte=pasaporte,
     )
+    db.session.add(doc)
+    db.session.commit()  # asegura doc.id
+    return doc
+
+# Tipo Especialidad
+from app.models import TipoEspecialidad
+
+def nuevotipoespecialidad(*args, **kwargs) -> TipoEspecialidad:
+    """
+    Usos:
+      - nuevotipoespecialidad() -> ("Cardiologia", "Avanzado")
+      - nuevotipoespecialidad(nombre, nivel)
+    """
+    if args:
+        nombre = args[0] if len(args) > 0 else "Cardiologia"
+        nivel = args[1] if len(args) > 1 else "Avanzado"
+    else:
+        nombre = kwargs.get("nombre", "Cardiologia")
+        nivel = kwargs.get("nivel", "Avanzado")
+
+    tipo = TipoEspecialidad(nombre=nombre, nivel=nivel)
+    db.session.add(tipo)
+    db.session.commit()
+    return tipo
