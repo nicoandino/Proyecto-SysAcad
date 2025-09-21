@@ -117,19 +117,53 @@ def crear_materia_persistida(**kwargs) -> Materia:
 # 🔁 Cambiar el alias para que devuelva la versión PERSISTIDA:
 def nuevamateria(**kwargs):
     return crear_materia_persistida(**kwargs)
+
 # Plan
-def nuevoplan(**kwargs):
-    return Plan(
-        especialidad=kwargs.get("especialidad"),
-        plan=kwargs.get("plan", 2020),
-        nombre=kwargs.get("nombre", "Plan de Ingeniería")
+
+def nuevoplan(*args, **kwargs) -> Plan:
+    if args:
+        # Posicional: (nombre, fecha_inicio, fecha_fin, observacion)
+        nombre = args[0] if len(args) > 0 else "Plan A"
+        fecha_inicio = args[1] if len(args) > 1 else None
+        fecha_fin = args[2] if len(args) > 2 else None
+        observacion = args[3] if len(args) > 3 else None
+    else:
+        nombre = kwargs.get("nombre", "Plan A")
+        fecha_inicio = kwargs.get("fecha_inicio")
+        fecha_fin = kwargs.get("fecha_fin")
+        observacion = kwargs.get("observacion")
+
+    # especialidad opcional (como objeto o id)
+    especialidad = kwargs.get("especialidad")
+    especialidad_id = kwargs.get("especialidad_id")
+    if especialidad and not especialidad_id:
+        especialidad_id = getattr(especialidad, "id", None)
+        if especialidad_id is None:
+            db.session.add(especialidad)
+            db.session.flush()
+            especialidad_id = especialidad.id
+
+    plan = Plan(
+        nombre=nombre,
+        fecha_inicio=fecha_inicio,
+        fecha_fin=fecha_fin,
+        observacion=observacion,
+        anio=kwargs.get("anio"),
+        especialidad_id=especialidad_id
     )
+
+    db.session.add(plan)
+    db.session.flush()
+    db.session.commit()
+    return plan
+
+
+
+# ---------- Tipo Especialidad ----------
 
 from app.models import Especialidad, TipoEspecialidad
 from app.services import EspecialidadService, TipoEspecialidadService
 
-
-# ---------- Tipo Especialidad ----------
 def nuevotipoespecialidad(**kwargs):
     tipo = TipoEspecialidad(
         nombre=kwargs.get("nombre", "Cardiologia")

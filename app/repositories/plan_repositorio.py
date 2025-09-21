@@ -3,23 +3,27 @@ from app.models import Plan
 
 class PlanRepository:
     @staticmethod
-    def crear(plan):
+    def crear(plan: Plan) -> Plan:
         db.session.add(plan)
+        db.session.flush()
+        db.session.refresh(plan)
         db.session.commit()
-      
+        return plan
 
-    def buscar_por_id(id: int):
+    @staticmethod
+    def buscar_por_id(id: int) -> Plan | None:
         return db.session.query(Plan).filter_by(id=id).first()
     
-    def buscar_todos():
+    @staticmethod
+    def buscar_todos() -> list[Plan]:
         return db.session.query(Plan).all()
     
-    def actualizar(plan: Plan) -> Plan:
-        plan_existente = db.session.merge(plan)
-        if not plan_existente:
-            # pyrefly: ignore  # bad-return
-            return None
-        return plan_existente
+    @staticmethod
+    def actualizar(plan: Plan) -> Plan | None:
+        merged = db.session.merge(plan)
+        db.session.flush()
+        db.session.commit()
+        return merged
     
     @staticmethod
     def borrar_por_id(id: int) -> bool:
