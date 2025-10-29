@@ -11,15 +11,12 @@ class Facultad(db.Model):
     __table_args__ = {"extend_existing": True}
     id: int = db.Column(db.Integer, primary_key=True, autoincrement=True)
     facultad: int = db.Column(db.Integer, nullable=False, default=0)
-
     nombre: str = db.Column(db.String(100), nullable=False)
     abreviatura: str  = db.Column(db.String(10), nullable=True)
     directorio: str  = db.Column(db.String(100), nullable=True)
     sigla: str  = db.Column(db.String(10), nullable=True)
-
     codigo_postal: str = db.Column('codigopostal', db.String(10), nullable=True)
     codigo = synonym('codigo_postal')
-
     ciudad: str = db.Column(db.String(50), nullable=True)
     domicilio: str = db.Column(db.String(100), nullable=True)
     telefono: str = db.Column(db.String(20), nullable=True)
@@ -39,8 +36,19 @@ class Facultad(db.Model):
         back_populates="facultad",
         cascade="all, delete-orphan"
     )
-
     autoridades = db.relationship('Autoridad', secondary=facultades_autoridades, back_populates='facultades')
+
+    #relacion alumnos
+    alumnos = db.relationship("Alumno",back_populates="facultad",cascade="all, delete-orphan")
+    
+
+
+
+
+
+
+
+
 
     def asociar_autoridad(self, autoridad):
         if autoridad not in self.autoridades:

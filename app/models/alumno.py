@@ -16,6 +16,34 @@ class Alumno(db.Model):
     nro_legajo       = db.Column(db.Integer, primary_key=True)
     fecha_ingreso    = db.Column(db.Date, nullable=False)
     
+    #relacione facultad
+    facultad_id = db.Column(db.Integer, db.ForeignKey('facultades.id', ondelete="RESTRICT"),
+        nullable=False,
+        index=True
+    )
+    facultad = db.relationship("Facultad", back_populates="alumnos")
+
+    #relacion especialidad
+    especialidad_id = db.Column(db.Integer, db.ForeignKey('especialidades.id', ondelete="RESTRICT"),
+        nullable=False,
+        index=True
+    )
+    especialidad = db.relationship("Especialidad", back_populates="alumnos")
+
+    #relacion tipo documento
+    tipo_documento_id = db.Column(db.Integer, db.ForeignKey('tipos_documento.id', ondelete="RESTRICT"),
+        nullable=False,
+        index=True
+    )
+    tipo_documento = db.relationship("TipoDocumento", back_populates="alumnos")
+
+    #relacion pais
+    pais_id = db.Column(db.Integer, db.ForeignKey('paises.id', ondelete="RESTRICT"),
+        nullable=False,
+        index=True
+    )
+    pais = db.relationship("Pais")
+    
     @property
     def nrodocumento(self):
         return self.nro_documento

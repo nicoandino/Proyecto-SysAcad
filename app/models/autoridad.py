@@ -18,6 +18,12 @@ class Autoridad(db.Model):
 
     facultades = db.relationship('Facultad', secondary=facultades_autoridades, back_populates='autoridades')
 
+    #relacion tipo documento
+    tipo_documento_id = db.Column(db.Integer, db.ForeignKey('tipodocumentos.id', ondelete="RESTRICT"),
+        nullable=False,
+        index=True
+    )   
+    tipo_documento = db.relationship("TipoDocumento", back_populates="autoridades")
 
     def asociar_materia(self, materia):
         if materia not in self.materias:

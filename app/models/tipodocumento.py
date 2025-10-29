@@ -1,14 +1,15 @@
 from dataclasses import dataclass
 from app import db
 
-#TODO cambiar a sigal o nombre de libreta_civica, libreta_enrolamiento, pasaporte
 @dataclass(init=False, repr=True, eq=True)
 class TipoDocumento(db.Model):
-    __tablename__ = 'tipodocumentos'
+    __tablename__ = "tipodocumentos"
     id: int = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    #sigla: porque pueden tener como L.C, L.E,  
-    #nombre: #dni, pasaporte
-    dni: int = db.Column(db.Integer, nullable=False)
-    libreta_civica: str = db.Column(db.String(20), nullable=False)
-    libreta_enrolamiento: str = db.Column(db.String(20), nullable=False)
-    pasaporte: str = db.Column(db.String(20), nullable=False)
+    sigla: str = db.Column(db.String(10), nullable=False, unique=True)
+    nombre: str = db.Column(db.String(100), nullable=False)
+    descripcion: str = db.Column(db.String(255))
+
+    #relacion alumnos
+    alumnos = db.relationship("Alumno", back_populates="tipo_documento")
+    #relacion autoridades
+    autoridades = db.relationship("Autoridad", back_populates="tipo_documento")
