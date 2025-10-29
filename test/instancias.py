@@ -418,74 +418,79 @@ def nuevaautoridad(**kwargs):
 # Alumno
 from app.models.facultad import Facultad
 
+from datetime import date
+from app import db
+from app.models import Alumno, Universidad, Facultad, Especialidad, TipoDocumento, Pais
+
+
 def nuevoalumno(**kwargs):
-    # 1️⃣ Crear o recuperar universidad
+    # 🔹 UNIVERSIDAD
     uni = kwargs.get("universidad")
-    if uni is None:
+    if not isinstance(uni, Universidad):
         uni = Universidad.query.first()
         if uni is None:
             uni = Universidad(nombre="Universidad Tecnológica Nacional")
             db.session.add(uni)
             db.session.commit()
 
-    # 2️⃣ Crear o recuperar facultad
+    # 🔹 FACULTAD
     facu = kwargs.get("facultad")
-    if facu is None:
+    if not isinstance(facu, Facultad):
         facu = Facultad.query.first()
         if facu is None:
             facu = Facultad(nombre="Facultad de Ingeniería", universidad=uni)
             db.session.add(facu)
             db.session.commit()
 
-    # 3️⃣ Crear o recuperar especialidad
+    # 🔹 ESPECIALIDAD
     esp = kwargs.get("especialidad")
-    if esp is None:
+    if not isinstance(esp, Especialidad):
         esp = Especialidad.query.first()
         if esp is None:
             esp = Especialidad(nombre="Sistemas", facultad=facu)
             db.session.add(esp)
             db.session.commit()
 
-    # 4️⃣ Crear o recuperar tipo de documento
+    # 🔹 TIPO DE DOCUMENTO (usa get_or_create)
     tipo_doc = kwargs.get("tipo_documento")
-    if tipo_doc is None:
-        tipo_doc = TipoDocumento.query.first()
+    if isinstance(tipo_doc, str):
+        tipo_doc = TipoDocumento.query.filter_by(sigla=tipo_doc).first()
+
+    if not isinstance(tipo_doc, TipoDocumento):
+        tipo_doc = TipoDocumento.query.filter_by(sigla="DNI").first()
         if tipo_doc is None:
             tipo_doc = TipoDocumento(
                 sigla="DNI",
-                nombre="DNI",
-                descripcion="Documento Nacional de Identidad"
+                nombre="Documento Nacional de Identidad",
+                descripcion="DNI"
             )
             db.session.add(tipo_doc)
             db.session.commit()
 
-
-
-
-    # 🔹 Crear o recuperar país
+    # 🔹 PAÍS
     pais = kwargs.get("pais")
-    if pais is None:
+    if not isinstance(pais, Pais):
         pais = Pais.query.first()
         if pais is None:
-            pais = Pais(id=1, nombre="Argentina")  # 👈 agregar id manualmente
+            pais = Pais(id=1, nombre="Argentina")
             db.session.add(pais)
             db.session.commit()
 
-
+    # 🔹 DATOS ALUMNO
     datos = {
-        "nombre": "Juan",
-        "apellido": "Pérez",
-        "nro_documento": 12345678,
-        "fecha_nacimiento": date(2000, 1, 1),
-        "sexo": "M",
-        "nro_legajo": 1001,
-        "fecha_ingreso": date(2022, 3, 1),
-        "tipo_documento_id": tipo_doc.id,
+        "nombre": kwargs.get("nombre", "Juan"),
+        "apellido": kwargs.get("apellido", "Pérez"),
+        "nro_documento": kwargs.get("nro_documento", 12345678),
+        "fecha_nacimiento": kwargs.get("fecha_nacimiento", date(2000, 1, 1)),
+        "sexo": kwargs.get("sexo", "M"),
+        "nro_legajo": kwargs.get("nro_legajo", 1001),
+        "fecha_ingreso": kwargs.get("fecha_ingreso", date(2022, 3, 1)),
+        "tipo_documento": tipo_doc,   # relación objeto
         "facultad": facu,
         "especialidad": esp,
-        "pais": pais,  # 👈 relación directa, no solo el ID
+        "pais": pais
     }
-    datos.update(kwargs)
+
     alumno = Alumno(**datos)
     db.session.add(alumno)
     db.session.commit()
@@ -513,22 +518,31 @@ def nuevotipodedicacion(*args, **kwargs) -> TipoDedicacion:
 
 # Tipo Documento
 def nuevotipodocumento(*args, **kwargs) -> TipoDocumento:
-    if args:
-        dni = args[0] if len(args) > 0 else 46291002
-        libreta_civica = args[1] if len(args) > 1 else "nacional"
-        libreta_enrolamiento = args[2] if len(args) > 2 else "LE"
-        pasaporte = args[3] if len(args) > 3 else "PAS"
-    else:
-        dni = kwargs.get("dni", 46291002)
-        libreta_civica = kwargs.get("libreta_civica", "nacional")
-        libreta_enrolamiento = kwargs.get("libreta_enrolamiento", "LE")
-        pasaporte = kwargs.get("pasaporte", "PAS")
+    """
+    Crea o recupera un tipo de documento.
+    Si ya existe uno con la misma sigla, lo reutiliza.
+    """
 
+    # --- 1️⃣ Obtener valores ---
+    if args:
+        sigla = args[0] if len(args) > 0 else "DNI"
+        nombre = args[1] if len(args) > 1 else "Documento Nacional de Identidad"
+        descripcion = args[2] if len(args) > 2 else "DNI"
+    else:
+        sigla = kwargs.get("sigla", "DNI")
+        nombre = kwargs.get("nombre", "Documento Nacional de Identidad")
+        descripcion = kwargs.get("descripcion", "DNI")
+
+    # --- 2️⃣ Buscar si ya existe por sigla ---
+    existente = TipoDocumento.query.filter_by(sigla=sigla).first()
+    if existente:
+        return existente  # evitar error de llave duplicada
+
+    # --- 3️⃣ Crear nuevo si no existe ---
     doc = TipoDocumento(
-        dni=dni,
-        libreta_civica=libreta_civica,
-        libreta_enrolamiento=libreta_enrolamiento,
-        pasaporte=pasaporte,
+        sigla=sigla,
+        nombre=nombre,
+        descripcion=descripcion
     )
     db.session.add(doc)
     db.session.commit()  # asegura doc.id
