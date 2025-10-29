@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from app.models.materias_especialidades import materias_especialidades
 from app.models.relations import autoridades_materias
 from app import db
 
@@ -12,18 +13,25 @@ class Materia(db.Model):
     codigo: str = db.Column(db.String(20), nullable=True)
     observacion: str = db.Column(db.String(255), nullable=True)
 
-    # 🔹 Relación con Especialidad
-    especialidad_id: int = db.Column(
-        db.Integer,
-        db.ForeignKey("especialidades.id"),
-        nullable=True   # si querés que siempre pertenezca a una especialidad
+    # 🔹 Relación N-M con Especialidad
+    especialidades = db.relationship(
+        "Especialidad",
+        secondary=materias_especialidades,
+        back_populates="materias",
+        cascade="all",
     )
-    especialidad = db.relationship("Especialidad", back_populates="materias")
 
-    # 🔹 Relación con Autoridad (ya la tenías)
+    # 🔹 Relación N-M con Autoridad
     autoridades = db.relationship(
         "Autoridad",
         secondary=autoridades_materias,
+        back_populates="materias",
+    )
+
+    # 🔹 Relación N-M con Planes
+    planes = db.relationship(
+        "Plan",
+        secondary="planes_materias",
         back_populates="materias"
     )
 

@@ -101,20 +101,59 @@ def nueva_materia(**kwargs) -> Materia:
         observacion=kwargs.get("observacion", "Matematica basica"),
     )
 
+from app import db
+from app.models import Universidad, Facultad, Especialidad, Materia
+
 def crear_materia_persistida(**kwargs) -> Materia:
     especialidad = kwargs.get("especialidad")
-    if not especialidad:
-        especialidad = Especialidad(nombre="Especialidad Test")
-        db.session.add(especialidad)
-        db.session.commit()
+    facultad = kwargs.get("facultad")
+    facultad_id = kwargs.get("facultad_id")
+    universidad = kwargs.get("universidad")
+    universidad_id = kwargs.get("universidad_id")
 
+    if especialidad is None:
+        # A) Universidad: reusar si existe, si no crear una
+        if universidad_id is None and universidad is None:
+            universidad = Universidad.query.first()
+            if universidad is None:
+                universidad = Universidad(nombre=kwargs.get("universidad_nombre", "Universidad Test"))
+                db.session.add(universidad)
+                db.session.flush()
+        if universidad_id is None and universidad is not None:
+            universidad_id = universidad.id
+
+        # B) Facultad: reusar si existe, si no crear con universidad_id
+        if facultad_id is None and facultad is None:
+            facultad = Facultad.query.first()
+            if facultad is None:
+                facultad = Facultad(
+                    nombre=kwargs.get("nombre_facultad", "Facultad Test"),
+                    facultad=kwargs.get("facultad_num", 0),
+                    universidad_id=universidad_id,
+                )
+                db.session.add(facultad)
+                db.session.flush()
+        if facultad_id is None and facultad is not None:
+            facultad_id = facultad.id
+
+        # C) Especialidad con facultad asignada
+        especialidad = Especialidad(
+            nombre=kwargs.get("nombre_especialidad", "Especialidad Test"),
+            facultad_id=facultad_id,
+        )
+        db.session.add(especialidad)
+        db.session.flush()
+
+    # D) Crear la materia y asociarla a la especialidad (N-M)
     materia = Materia(
         nombre=kwargs.get("nombre", "Matematica"),
         codigo=kwargs.get("codigo", "MAT101"),
         observacion=kwargs.get("observacion", "Matematica basica"),
-        especialidad_id=especialidad.id,
     )
+    materia.especialidades.append(especialidad)
+
     return MateriaService.crear_materia(materia)
+
 
 # 🔁 Cambiar el alias para que devuelva la versión PERSISTIDA:
 def nuevamateria(**kwargs):
@@ -122,9 +161,9 @@ def nuevamateria(**kwargs):
 
 # Plan
 
+
 def nuevoplan(*args, **kwargs) -> Plan:
     if args:
-        # Posicional: (nombre, fecha_inicio, fecha_fin, observacion)
         nombre = args[0] if len(args) > 0 else "Plan A"
         fecha_inicio = args[1] if len(args) > 1 else None
         fecha_fin = args[2] if len(args) > 2 else None
@@ -135,16 +174,43 @@ def nuevoplan(*args, **kwargs) -> Plan:
         fecha_fin = kwargs.get("fecha_fin")
         observacion = kwargs.get("observacion")
 
-    # especialidad opcional (como objeto o id)
+    # 🔹 Si no viene especialidad, la creamos completa (con facultad y universidad)
     especialidad = kwargs.get("especialidad")
     especialidad_id = kwargs.get("especialidad_id")
-    if especialidad and not especialidad_id:
-        especialidad_id = getattr(especialidad, "id", None)
-        if especialidad_id is None:
-            db.session.add(especialidad)
-            db.session.flush()
-            especialidad_id = especialidad.id
 
+    if not especialidad and not especialidad_id:
+        # Universidad
+        universidad = Universidad(nombre="Universidad Test")
+        db.session.add(universidad)
+        db.session.flush()
+
+        # Facultad
+        facultad = Facultad(nombre="Facultad Test", facultad=0, universidad_id=universidad.id)
+        db.session.add(facultad)
+        db.session.flush()
+
+        # Tipo de especialidad
+        tipo = TipoEspecialidad(nombre="Tipo Test")
+        db.session.add(tipo)
+        db.session.flush()
+
+        # Especialidad
+        especialidad = Especialidad(
+            nombre="Especialidad Test",
+            facultad_id=facultad.id,
+            tipoespecialidad_id=tipo.id
+        )
+        db.session.add(especialidad)
+        db.session.flush()
+
+        especialidad_id = especialidad.id
+
+    elif especialidad and not especialidad_id:
+        db.session.add(especialidad)
+        db.session.flush()
+        especialidad_id = especialidad.id
+
+    # 🔹 Crear plan con especialidad obligatoria
     plan = Plan(
         nombre=nombre,
         fecha_inicio=fecha_inicio,
@@ -155,10 +221,8 @@ def nuevoplan(*args, **kwargs) -> Plan:
     )
 
     db.session.add(plan)
-    db.session.flush()
     db.session.commit()
     return plan
-
 
 
 # ---------- Tipo Especialidad ----------
@@ -175,21 +239,69 @@ def nuevotipoespecialidad(**kwargs):
 
 # ---------- Especialidad ----------
 def nuevaespecialidad(**kwargs):
+    # 1) Tipo (dejás tu helper para "Cardiologia")
     tipo = kwargs.get("tipoespecialidad") or nuevotipoespecialidad(nombre="Cardiologia")
-    especialidad = Especialidad(
-        nombre=kwargs.get("nombre", "Matematicas"),  # sin tilde para pasar test
-        letra=kwargs.get("letra", "A"),
-        tipoespecialidad=tipo                       # relación, no mezclar con *_id
-    )
-    return EspecialidadService.crear(especialidad)  # devuelve instancia persistida con id
 
-# Orientación
+    # 2) Universidad (reusar si viene; si no, crear)
+    universidad = kwargs.get("universidad")
+    universidad_id = kwargs.get("universidad_id")
+    if universidad is None and universidad_id is None:
+        universidad = Universidad(nombre=kwargs.get("universidad_nombre", "Universidad Test"))
+        db.session.add(universidad)
+        db.session.flush()
+        universidad_id = universidad.id
+    elif universidad is not None and universidad_id is None:
+        universidad_id = universidad.id
+
+    # 3) Facultad (reusar si viene; si no, crear con universidad_id)
+    facultad = kwargs.get("facultad")
+    facultad_id = kwargs.get("facultad_id")
+    if facultad is None and facultad_id is None:
+        facultad = Facultad(
+            nombre=kwargs.get("nombre_facultad", "Facultad Test"),
+            facultad=kwargs.get("facultad_num", 0),
+            universidad_id=universidad_id,
+        )
+        db.session.add(facultad)
+        db.session.flush()
+        facultad_id = facultad.id
+    elif facultad is not None and facultad_id is None:
+        facultad_id = facultad.id
+
+    # 4) Especialidad con todas las FKs completas
+    especialidad = Especialidad(
+        nombre=kwargs.get("nombre", "Matematicas"),
+        letra=kwargs.get("letra", "A"),
+        tipoespecialidad=tipo,   # relación ok
+        facultad_id=facultad_id  # <- clave: NOT NULL
+    )
+
+    # 5) Dejar que el Service persista
+    return EspecialidadService.crear(especialidad)
 def nuevaorientacion(**kwargs) -> Orientacion:
-    # --- TipoEspecialidad ---
+    # --- Tipo de especialidad ---
     tipo = kwargs.get("tipoespecialidad")
     if not tipo:
         tipo = TipoEspecialidad(nombre="Cardiologia")
         db.session.add(tipo)
+        db.session.flush()
+
+    # --- Universidad ---
+    universidad = kwargs.get("universidad")
+    if not universidad:
+        universidad = Universidad(nombre="Universidad Nacional")
+        db.session.add(universidad)
+        db.session.flush()
+
+    # --- Facultad ---
+    facultad = kwargs.get("facultad")
+    if not facultad:
+        facultad = Facultad(
+            nombre="Facultad de Ciencias",
+            facultad=1,
+            universidad_id=universidad.id
+        )
+        db.session.add(facultad)
         db.session.flush()
 
     # --- Especialidad ---
@@ -198,7 +310,8 @@ def nuevaorientacion(**kwargs) -> Orientacion:
         especialidad = Especialidad(
             nombre=kwargs.get("nombre_especialidad", "Especialidad Test"),
             letra=kwargs.get("letra_especialidad", "A"),
-            tipoespecialidad=tipo
+            tipoespecialidad=tipo,
+            facultad_id=facultad.id  # 👈 antes faltaba esto
         )
         db.session.add(especialidad)
         db.session.flush()
@@ -208,10 +321,12 @@ def nuevaorientacion(**kwargs) -> Orientacion:
     if not plan:
         plan = Plan(
             nombre=kwargs.get("nombre_plan", "Plan 2024"),
-            fecha_inicio=kwargs.get("fecha_inicio_plan", date(2024, 6, 4))
+            fecha_inicio=kwargs.get("fecha_inicio_plan", date(2024, 6, 4)),
+            especialidad_id=especialidad.id  # 👈 Esto faltaba
         )
         db.session.add(plan)
         db.session.flush()
+
 
     # --- Materia ---
     materia = kwargs.get("materia")
@@ -224,7 +339,7 @@ def nuevaorientacion(**kwargs) -> Orientacion:
         db.session.add(materia)
         db.session.flush()
 
-    # --- Orientacion ---
+    # --- Orientación ---
     orientacion = Orientacion(
         nombre=kwargs.get("nombre", "Orientacion 1"),
         especialidad_id=especialidad.id,

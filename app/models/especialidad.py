@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 from app import db
-from app.models import TipoEspecialidad
+from app.models.materias_especialidades import materias_especialidades
 
 @dataclass(init=False, repr=True, eq=True)
 class Especialidad(db.Model):
-    __tablename__ = 'especialidades'
+    __tablename__ = "especialidades"
     __table_args__ = {"extend_existing": True}
 
     id: int = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -14,16 +14,30 @@ class Especialidad(db.Model):
 
     tipoespecialidad_id: int = db.Column(
         db.Integer,
-        db.ForeignKey('tipoespecialidades.id'),
-        nullable=True   # <--- ahora acepta NULL
+        db.ForeignKey("tipoespecialidades.id"),
+        nullable=True,
     )
-    tipoespecialidad = db.relationship('TipoEspecialidad', lazy=True)
+    tipoespecialidad = db.relationship("TipoEspecialidad", lazy=True)
 
     facultad_id: int = db.Column(
         db.Integer,
-        db.ForeignKey('facultades.id'),
-        nullable=True   # <--- ahora acepta NULL
+        db.ForeignKey("facultades.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
-    facultad = db.relationship('Facultad', lazy=True)
-    materias = db.relationship("Materia", back_populates="especialidad")
+    facultad = db.relationship("Facultad", back_populates="especialidades")
 
+    # 🔹 N-M con Materias
+    materias = db.relationship(
+        "Materia",
+        secondary=materias_especialidades,
+        back_populates="especialidades",
+        cascade="all",
+    )
+
+    # 🔹 1-N con Planes
+    planes = db.relationship(
+        "Plan",
+        back_populates="especialidad",
+        cascade="all, delete-orphan"
+    )

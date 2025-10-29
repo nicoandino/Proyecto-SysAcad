@@ -9,5 +9,12 @@ class Universidad(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     nombre = db.Column(db.String(255), nullable=False)
-    sigla = db.Column(db.String(50), nullable=True)  
+    sigla = db.Column(db.String(50), nullable=True)
 
+    # 1 — N: Universidad -> Facultades
+    facultades = db.relationship(
+        "Facultad",
+        back_populates="universidad",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )

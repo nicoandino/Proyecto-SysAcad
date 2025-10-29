@@ -7,6 +7,7 @@ from flask_hashids import Hashids
 from sqlalchemy import event
 from app.config import config
 
+
 db = SQLAlchemy()
 migrate = Migrate()
 ma = Marshmallow()
@@ -14,13 +15,16 @@ hashids = Hashids()
 
 def create_app() -> Flask:
     app = Flask(__name__)
-    app_context = os.getenv('FLASK_CONTEXT', 'development')
+    app_context = os.getenv('FLASK_CONTEXT', 'testing')
     app.config.from_object(config.factory(app_context))
 
     db.init_app(app)
     migrate.init_app(app, db)
     ma.init_app(app)
     hashids.init_app(app)
+    from app import models
+    with app.app_context():
+        db.create_all()
 
     # --- Airbag: completa 'descripcion' si falta ---
     @event.listens_for(db.session.__class__, "before_flush", propagate=True)
@@ -66,5 +70,5 @@ def create_app() -> Flask:
     @app.shell_context_processor
     def ctx():
         return {"app": app, "db": db}
-
+    print(f"App created with context: {app_context}")
     return app

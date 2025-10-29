@@ -20,4 +20,6 @@ from .pais import Pais
 GradoModel = Grado
 from .especialidad import Especialidad
 from .tipoespecialidad import TipoEspecialidad
+from .materias_especialidades import materias_especialidades
+from .planes_materias import planes_materias
 __all__ = ["Especialidad", "TipoEspecialidad"]
