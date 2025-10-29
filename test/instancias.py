@@ -416,19 +416,81 @@ def nuevaautoridad(**kwargs):
     return autoridad
 
 # Alumno
+from app.models.facultad import Facultad
+
 def nuevoalumno(**kwargs):
+    # 1️⃣ Crear o recuperar universidad
+    uni = kwargs.get("universidad")
+    if uni is None:
+        uni = Universidad.query.first()
+        if uni is None:
+            uni = Universidad(nombre="Universidad Tecnológica Nacional")
+            db.session.add(uni)
+            db.session.commit()
+
+    # 2️⃣ Crear o recuperar facultad
+    facu = kwargs.get("facultad")
+    if facu is None:
+        facu = Facultad.query.first()
+        if facu is None:
+            facu = Facultad(nombre="Facultad de Ingeniería", universidad=uni)
+            db.session.add(facu)
+            db.session.commit()
+
+    # 3️⃣ Crear o recuperar especialidad
+    esp = kwargs.get("especialidad")
+    if esp is None:
+        esp = Especialidad.query.first()
+        if esp is None:
+            esp = Especialidad(nombre="Sistemas", facultad=facu)
+            db.session.add(esp)
+            db.session.commit()
+
+    # 4️⃣ Crear o recuperar tipo de documento
+    tipo_doc = kwargs.get("tipo_documento")
+    if tipo_doc is None:
+        tipo_doc = TipoDocumento.query.first()
+        if tipo_doc is None:
+            tipo_doc = TipoDocumento(
+                sigla="DNI",
+                nombre="DNI",
+                descripcion="Documento Nacional de Identidad"
+            )
+            db.session.add(tipo_doc)
+            db.session.commit()
+
+
+
+
+    # 🔹 Crear o recuperar país
+    pais = kwargs.get("pais")
+    if pais is None:
+        pais = Pais.query.first()
+        if pais is None:
+            pais = Pais(id=1, nombre="Argentina")  # 👈 agregar id manualmente
+            db.session.add(pais)
+            db.session.commit()
+
+
     datos = {
         "nombre": "Juan",
         "apellido": "Pérez",
         "nro_documento": 12345678,
-        "tipo_documento": kwargs.get("tipo_documento", "DNI"),  # 👈 string
         "fecha_nacimiento": date(2000, 1, 1),
         "sexo": "M",
         "nro_legajo": 1001,
-        "fecha_ingreso": date(2022, 3, 1)
+        "fecha_ingreso": date(2022, 3, 1),
+        "tipo_documento_id": tipo_doc.id,
+        "facultad": facu,
+        "especialidad": esp,
+        "pais": pais,  # 👈 relación directa, no solo el ID
     }
     datos.update(kwargs)
-    return Alumno(**datos)
+    alumno = Alumno(**datos)
+    db.session.add(alumno)
+    db.session.commit()
+    return alumno
+
 
 # Tipo Dedicación
 

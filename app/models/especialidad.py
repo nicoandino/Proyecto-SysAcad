@@ -41,3 +41,9 @@ class Especialidad(db.Model):
         back_populates="especialidad",
         cascade="all, delete-orphan"
     )
+    # 🔹 1-N con Alumnos
+    alumnos = db.relationship(
+        "Alumno",
+        back_populates="especialidad",
+        cascade="all, delete-orphan"
+    )

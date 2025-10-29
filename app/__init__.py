@@ -24,7 +24,6 @@ def create_app() -> Flask:
     hashids.init_app(app)
     from app import models
     with app.app_context():
-        db.drop_all()
         db.create_all()
 
     # --- Airbag: completa 'descripcion' si falta ---
