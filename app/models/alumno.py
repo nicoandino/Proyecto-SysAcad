@@ -31,7 +31,7 @@ class Alumno(db.Model):
     especialidad = db.relationship("Especialidad", back_populates="alumnos")
 
     #relacion tipo documento
-    tipo_documento_id = db.Column(db.Integer, db.ForeignKey('tipos_documento.id', ondelete="RESTRICT"),
+    tipo_documento_id = db.Column(db.Integer, db.ForeignKey('tipodocumentos.id', ondelete="RESTRICT"),
         nullable=False,
         index=True
     )
