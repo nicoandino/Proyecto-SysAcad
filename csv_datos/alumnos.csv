@@ -1,0 +1,6 @@
+nro_legajo,apellido,nombre,nro_documento,fecha_nacimiento,sexo,fecha_ingreso,facultad_id,especialidad_id,tipo_documento_id,pais_id
+1,Andino,Nicolás,40111222,2000-01-01,M,2020-03-01,1,1,1,1
+2,López,Ezequiel,40222333,1999-02-02,M,2020-03-01,1,2,1,1
+3,Martínez,Matías,40333444,1998-03-03,M,2021-03-01,2,3,1,1
+4,Suárez,Lucas,40444555,1997-04-04,M,2021-03-01,3,4,1,1
+5,Gómez,Mariana,40555666,1996-05-05,F,2022-03-01,4,5,1,1

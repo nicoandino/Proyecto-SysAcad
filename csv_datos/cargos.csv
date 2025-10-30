@@ -1,0 +1,6 @@
+id,nombre,descripcion,grado,categoria_cargo_id,tipo_dedicacion_id
+1,Profesor,Sin descripción,1,,
+2,Jefe de Cátedra,Sin descripción,2,,
+3,Ayudante,Sin descripción,3,,
+4,Asistente,Sin descripción,4,,
+5,Investigador,Sin descripción,5,,

@@ -1,0 +1,6 @@
+id,nombre,letra,observacion,tipoespecialidad_id,facultad_id
+1,Ingeniería en Sistemas,A,Plan vigente,1,1
+2,Ingeniería Electrónica,B,Plan vigente,1,2
+3,Ingeniería Civil,C,Plan vigente,1,3
+4,Ingeniería Industrial,D,Plan vigente,1,4
+5,Ingeniería Química,E,Plan vigente,1,5
