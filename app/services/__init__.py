@@ -15,3 +15,4 @@ from .tipodedicacion_service    import TipoDedicacionService
 from .tipodocumento_service import TipoDocumentoService
 from .tipoespecialidad_service import TipoEspecialidadService
 from .universidad_service import UniversidadService
+from .localidad_service import LocalidadService

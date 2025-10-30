@@ -583,3 +583,22 @@ def nuevotipoespecialidad(*args, **kwargs) -> TipoEspecialidad:
     db.session.add(tipo)
     db.session.commit()
     return tipo
+
+# Localidad
+from app.models import Localidad
+from app import db
+
+def nuevalocalidad(**kwargs) -> Localidad:
+    """
+    Crea una Localidad persistida para pruebas.
+    Si no se pasan argumentos, se usan valores por defecto.
+    """
+    loc = Localidad(
+        codigo=kwargs.get("codigo", 1000),
+        ciudad=kwargs.get("ciudad", "San Rafael"),
+        provincia=kwargs.get("provincia", "Mendoza"),
+        pais=kwargs.get("pais", "Argentina")
+    )
+    db.session.add(loc)
+    db.session.commit()
+    return loc

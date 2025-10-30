@@ -15,3 +15,4 @@ from .cargo_repositorio import CargoRepository
 from .orientacion_repositorio import OrientacionRepository
 from .autoridad_repositorio import AutoridadRepository
 from .facultad_repositorio import FacultadRepository
+from .localidad_repositorio import LocalidadRepository

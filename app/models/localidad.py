@@ -10,3 +10,6 @@ class Localidad(db.Model):
     ciudad = db.Column(db.String(100), nullable=False)
     provincia = db.Column(db.String(50), nullable=True)
     pais = db.Column(db.String(50), nullable=True)
+
+#relacion facultades 1-N(una localidad tiene muchas facultades)
+    facultades = db.relationship('Facultad', back_populates='localidad')

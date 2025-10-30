@@ -41,13 +41,12 @@ class Facultad(db.Model):
     #relacion alumnos
     alumnos = db.relationship("Alumno",back_populates="facultad",cascade="all, delete-orphan")
     
-
-
-
-
-
-
-
+    #relacion localidad 1-N(una facultad tiene una localidad)
+    localidad_id: int = db.Column(db.Integer,db.ForeignKey('localidades.id', ondelete="RESTRICT"),
+        nullable=True,
+        index=True
+    )
+    localidad = db.relationship('Localidad', back_populates='facultades')
 
 
     def asociar_autoridad(self, autoridad):
