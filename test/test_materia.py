@@ -4,7 +4,7 @@ from flask import current_app
 from app import create_app, db
 from app.models import Materia, Orientacion, Autoridad, Cargo, CategoriaCargo, TipoDedicacion
 from app.services import MateriaService
-
+from app.models.tipodocumento import TipoDocumento
 
 class AppTestCase(unittest.TestCase):
 
@@ -92,6 +92,16 @@ class AppTestCase(unittest.TestCase):
         autoridad.telefono = "123456789"
         autoridad.email = "email123@mail.com"
         autoridad.cargo = self.__nuevoCargo()
+
+        # 🔹 Crear o reutilizar un TipoDocumento por defecto
+        tipo_doc = TipoDocumento.query.filter_by(sigla="DNI").first()
+        if not tipo_doc:
+            tipo_doc = TipoDocumento(nombre="Documento Nacional de Identidad", sigla="DNI")
+            db.session.add(tipo_doc)
+            db.session.commit()
+
+        autoridad.tipo_documento = tipo_doc  # 🔹 Relación establecida
+
         return autoridad
     
     def __nuevoCargo(self):

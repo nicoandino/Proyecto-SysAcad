@@ -400,12 +400,26 @@ def nuevaautoridad(**kwargs):
         db.session.commit()
         cargo_id = cargo.id
 
+    tipo_documento = kwargs.get("tipo_documento")
+    tipo_documento_id = kwargs.get("tipo_documento_id")
+
+    # 🔹 Si no viene ninguno, creamos o buscamos el tipo "DNI"
+    if not tipo_documento and not tipo_documento_id:
+        tipo_documento = TipoDocumento.query.filter_by(sigla="DNI").first()
+        if not tipo_documento:
+            tipo_documento = TipoDocumento(nombre="Documento Nacional de Identidad", sigla="DNI")
+            db.session.add(tipo_documento)
+            db.session.commit()
+        tipo_documento_id = tipo_documento.id
+
     autoridad = Autoridad(
         nombre=kwargs.get("nombre", "Pelo"),
         telefono=kwargs.get("telefono", "123456789"),
         email=kwargs.get("email", "pelo@example.com"),
-        cargo_id=cargo_id
+        cargo_id=cargo_id,
+        tipo_documento_id=tipo_documento_id  # 🔹 ahora no será NULL
     )
+
     if "materias" in kwargs:
         autoridad.materias.extend(kwargs["materias"])
     if "facultades" in kwargs:
@@ -414,6 +428,7 @@ def nuevaautoridad(**kwargs):
     db.session.add(autoridad)
     db.session.commit()
     return autoridad
+
 
 # Alumno
 from app.models.facultad import Facultad
