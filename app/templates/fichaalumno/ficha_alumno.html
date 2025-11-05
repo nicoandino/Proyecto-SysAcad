@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8"> 
+    <title>Ficha del Alumno: {{ alumno.apellido }}, {{ alumno.nombre }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+
+        body {
+            font-family: "DejaVu Sans", sans-serif; 
+            color: #000;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+
+        .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        .text-justificado {
+            text-align: justify;
+            font-size: 1.2em;
+            line-height: 1.5;
+            margin-top: 40px;
+        }
+
+        img {
+            height: 70px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img src="{{ url_for('static', filename='img/logo-ministerio.png', _external=True) }}" alt="Logo Ministerio">
+        <img src="{{ url_for('static', filename='img/logo-utn.png', _external=True) }}" alt="Logo UTN">
+    </div>
+
+    <h1>Ficha del Alumno</h1>
+
+    <p class="text-justificado">
+        La presente ficha contiene la información académica básica del estudiante
+        <strong>{{ alumno.apellido }}</strong>, <strong>{{ alumno.nombre }}</strong>,
+        identificado con <strong>{{ alumno.tipo_documento.sigla }}</strong> 
+        <strong>{{ alumno.nrodocumento }}</strong>, con número de legajo 
+        <strong>{{ alumno.nro_legajo }}</strong>.<br><br>
+
+        El alumno se encuentra registrado en la <strong>{{ facultad.nombre }}</strong>,
+        perteneciente a la <strong>{{ universidad.nombre }}</strong>, 
+        cursando la especialidad de <strong>{{ especialidad.nombre }}</strong>.<br><br>
+
+        Su fecha de ingreso a la institución fue el <strong>{{ alumno.fecha_ingreso }}</strong>,
+        y actualmente figura como estudiante activo dentro del sistema académico institucional.<br><br>
+
+        Esta ficha se emite con fines informativos, reflejando los datos actualizados en la base
+        de alumnos de la Universidad Tecnológica Nacional,  <strong>{{ facultad.nombre }}</strong>.
+    </p>
+</body>
+</html>

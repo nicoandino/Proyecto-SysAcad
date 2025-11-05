@@ -50,7 +50,7 @@ def create_app() -> Flask:
     from app.resources.plan_resource import plan_bp
     from app.resources.cargo_resource import cargo_bp
     from app.resources.alumno_resource import alumno_bp
-
+    
     # --- Registro con prefijo /sys ---
     app.register_blueprint(home_bp, url_prefix="/sys")
     app.register_blueprint(universidad_bp, url_prefix="/sys")

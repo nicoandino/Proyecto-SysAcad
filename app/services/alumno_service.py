@@ -119,12 +119,8 @@ class AlumnoService:
             or getattr(alumno, "tipo_documento", "")  # FIX: si es string plano, úsalo
             or ""
         )
-
     @staticmethod
     def _contexto_certificado(alumno: Alumno) -> dict:
-        """
-        Devuelve sólo strings/valores simples para evitar sorpresas de ORM en Jinja.
-        """
         esp = getattr(alumno, "especialidad", None)
         fac = getattr(esp, "facultad", None) if esp else None
         uni = getattr(fac, "universidad", None) if fac else None
@@ -145,11 +141,11 @@ class AlumnoService:
             "alumno": {
                 "apellido": alumno.apellido or "",
                 "nombre": alumno.nombre or "",
-                "tipo_documento": {        # ✅ para que funcione {{alumno.tipo_documento.sigla}}
-                    "sigla": tipo_doc_sigla
-                },
-                "nrodocumento": nro_doc_val,  # ✅ para que funcione {{alumno.nrodocumento}}
+                "tipo_documento": {"sigla": tipo_doc_sigla},
+                "nrodocumento": nro_doc_val,
                 "nro_legajo": str(alumno.nro_legajo or ""),
+                # ✅ Nueva línea
+                "fecha_ingreso": alumno.fecha_ingreso.strftime("%d/%m/%Y") if alumno.fecha_ingreso else "",
             },
             "especialidad": {"nombre": esp_nombre},
             "facultad": {"nombre": fac_nombre},
@@ -172,4 +168,43 @@ class AlumnoService:
 
         buffer = BytesIO(pdf_bytes)
         filename = f"certificado_{ctx['alumno']['nro_legajo']}.pdf"
+        return buffer, filename
+
+
+    @staticmethod
+    def serializar_alumno(alumno) -> dict:
+        return {
+            "nro_legajo": alumno.nro_legajo,
+            "apellido": alumno.apellido,
+            "nombre": alumno.nombre,
+            "tipo_documento": getattr(alumno.tipo_documento, "sigla", alumno.tipo_documento),
+            "nro_documento": alumno.nro_documento,
+            "facultad": getattr(alumno.facultad, "nombre", ""),
+            "especialidad": getattr(alumno.especialidad, "nombre", ""),
+            "pais": getattr(alumno.pais, "nombre", ""),
+            "fecha_ingreso": alumno.fecha_ingreso.strftime("%d/%m/%Y"),
+        }
+
+    @staticmethod
+    def generar_ficha_alumno_pdf(alumno_id: int):
+        alumno = AlumnoRepository.buscar_por_id(alumno_id)
+        if not alumno:
+            return None
+
+        # ✅ usar el mismo contexto que el certificado
+        ctx = AlumnoService._contexto_certificado(alumno)
+
+        html = render_template(
+            "fichaalumno/ficha_alumno.html",
+            **ctx  # ✅ importante: descomponer el diccionario para pasar todas las claves
+        )
+
+        config = pdfkit.configuration(
+            wkhtmltopdf=r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe"
+        )
+        options = {"encoding": "UTF-8", "quiet": ""}
+
+        pdf_bytes = pdfkit.from_string(html, False, configuration=config, options=options)
+        buffer = BytesIO(pdf_bytes)
+        filename = f"ficha_alumno_{ctx['alumno']['nro_legajo']}.pdf"
         return buffer, filename
