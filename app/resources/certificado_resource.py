@@ -11,10 +11,28 @@ def certificado_en_docx(id: int):
     if not res:
         abort(404, description="Alumno no encontrado")
 
+
     buffer, filename = res
+    
     return send_file(
         buffer,
         mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        as_attachment=True,
+        download_name=filename,
+         
+    )
+
+@certificado_bp.route("/certificado/<int:id>/pdf", methods=["GET"])
+def certificado_en_pdf(id: int):
+    res = AlumnoService.generar_certificado_alumno_regular_pdf(id)
+    if not res:
+        abort(404, description="Alumno no encontrado")
+
+    buffer, filename = res
+
+    return send_file(
+        buffer,
+        mimetype="application/pdf",
         as_attachment=True,
         download_name=filename,
     )

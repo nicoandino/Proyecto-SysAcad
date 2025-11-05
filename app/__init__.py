@@ -23,9 +23,8 @@ def create_app() -> Flask:
     ma.init_app(app)
     hashids.init_app(app)
     from app import models
-    with app.app_context():
-        db.drop_all()
-        db.create_all()
+   # with app.app_context():
+    #    db.create_all()
 
     # --- Airbag: completa 'descripcion' si falta ---
     @event.listens_for(db.session.__class__, "before_flush", propagate=True)

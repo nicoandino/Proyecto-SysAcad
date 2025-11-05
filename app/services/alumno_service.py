@@ -8,6 +8,8 @@ from flask import current_app
 from docxtpl import DocxTemplate
 import jinja2
 from datetime import date
+import pdfkit
+from flask import render_template
 
 from app import db
 from app.models.alumno import Alumno
@@ -127,31 +129,47 @@ class AlumnoService:
         fac = getattr(esp, "facultad", None) if esp else None
         uni = getattr(fac, "universidad", None) if fac else None
 
-        # Validaciones mínimas por si faltan relaciones (puede ajustarse a tu modelo)
         esp_nombre = getattr(esp, "nombre", "")
         fac_nombre = getattr(fac, "nombre", "")
         uni_nombre = getattr(uni, "nombre", "")
 
-        # FIX: calcular valores que la plantilla podría requerir a nivel top
-        tipo_doc_val = AlumnoService._tipo_doc_sigla_safe(alumno)
+        tipo_doc_sigla = (
+            getattr(getattr(alumno, "tipo_documento", None), "sigla", None)
+            or getattr(alumno, "tipo_documento_sigla", "")
+            or ""
+        )
+
         nro_doc_val = str(getattr(alumno, "nro_documento", "") or "")
 
         return {
             "alumno": {
                 "apellido": alumno.apellido or "",
                 "nombre": alumno.nombre or "",
-                "tipo_doc_sigla": tipo_doc_val,
-                "tipo_documento": tipo_doc_val,          # FIX: también disponible dentro de alumno
-                "nro_documento": nro_doc_val,
+                "tipo_documento": {        # ✅ para que funcione {{alumno.tipo_documento.sigla}}
+                    "sigla": tipo_doc_sigla
+                },
+                "nrodocumento": nro_doc_val,  # ✅ para que funcione {{alumno.nrodocumento}}
                 "nro_legajo": str(alumno.nro_legajo or ""),
             },
-            # FIX: claves a nivel top por compatibilidad con plantillas viejas
-            "tipo_documento": tipo_doc_val,
-            "nro_documento": nro_doc_val,
-
             "especialidad": {"nombre": esp_nombre},
             "facultad": {"nombre": fac_nombre},
             "universidad": {"nombre": uni_nombre},
-            "ciudad": "SAN RAFAEL, MENDOZA",
             "fecha": AlumnoService._fecha_larga_es(date.today()),
         }
+
+    @staticmethod
+    def generar_certificado_alumno_regular_pdf(alumno_id: int):
+        alumno = AlumnoRepository.buscar_por_id(alumno_id)
+        if not alumno:
+            return None
+
+        ctx = AlumnoService._contexto_certificado(alumno)
+        html_string = render_template("certificado/certificado_pdf.html", **ctx)
+
+        # Ruta al ejecutable wkhtmltopdf
+        config = pdfkit.configuration(wkhtmltopdf=r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe")
+        pdf_bytes = pdfkit.from_string(html_string, False, configuration=config)
+
+        buffer = BytesIO(pdf_bytes)
+        filename = f"certificado_{ctx['alumno']['nro_legajo']}.pdf"
+        return buffer, filename
