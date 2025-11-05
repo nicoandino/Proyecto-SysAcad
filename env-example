@@ -1,5 +1,6 @@
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 SQLALCHEMY_RECORD_QUERIES = True
+FLASK_CONTEXT='testing'
 TEST_DATABASE_URI='postgresql+psycopg2://postgres:contraseña@localhost:5432/TEST_SYSACAD'
 DEV_DATABASE_URI='postgresql+psycopg2://postgres:contraseña@localhost:5432/DEV_SYSACAD'
 PROD_DATABASE_URI='postgresql://postgres:contraseña@localhost:5432/SYSACAD'
