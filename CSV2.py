@@ -1,11 +1,10 @@
 import os
 import pandas as pd
 from sqlalchemy import create_engine, text
+from dotenv import load_dotenv
 
-# ⚙️ CONFIGURACIÓN
-# Cambiá esta URI por la de tu base:
-DATABASE_URI = 'postgresql+psycopg2://postgres:nico@localhost:5432/test_sysacad'
-
+load_dotenv()
+DATABASE_URI = os.getenv("DATABASE_URI")
 engine = create_engine(DATABASE_URI)
 CSV_DIR = "csv_datos"
 
