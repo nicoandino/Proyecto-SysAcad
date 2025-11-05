@@ -13,3 +13,8 @@ python-docx==1.2.0
 docxcompose==1.4.0
 Flask-Hashids==1.0.3
 marshmallow-sqlalchemy==1.0.0
+pdfkit ==1.0.0
+Jinja2==3.1.4
+
+# Dependencia externa necesaria:
+# wkhtmltopdf (instalador desde https://wkhtmltopdf.org/downloads.html)
